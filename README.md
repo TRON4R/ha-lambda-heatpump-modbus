@@ -5,7 +5,7 @@
 
 <br clear="left"/>
 
-**YAML package to integrate Lambda EU-L series air/water heat pumps into Home Assistant via native Modbus TCP — no custom component required.**
+**YAML package to integrate Lambda EU-L series air/water heat pumps into Home Assistant via native Modbus TCP.**
 
 ---
 
@@ -18,7 +18,6 @@ Modbus register map is identical across the entire Lambda EU-L series:
 - EU13L
 - EU15L
 - EU20L
-- EU30L
 
 Only the physical heating capacity differs — the register block layout,
 scaling, data types and enumerations are shared between all models. Renaming
@@ -123,58 +122,16 @@ in the dashboard editor.
 Without these cards the dashboard card will not render correctly. The Modbus
 YAML itself works independently.
 
-## Register Overview
+## Undocumented Registers (Heat Pump 1)
 
-### Ambient (Register Block 0000)
+Eight additional registers exist in the 1025-1032 range that are **not**
+documented in the official Lambda Modbus specification. They were identified
+by a full Modbus scan and matched against values visible on the Lambda control
+panel (at user level 2 or 3). Column "Panel Label" lists the corresponding
+German panel term so they can be cross-checked.
 
-| Register | Sensor | Unit |
-|---|---|---|
-| 0000 | Error Number | — |
-| 0001 | Operating State | — |
-| 0002 | Temperature Actual | °C |
-| 0003 | Temperature Average 1h | °C |
-| 0004 | Temperature Calculated | °C |
-
-### E-Manager (Register Block 0100)
-
-| Register | Sensor | Unit |
-|---|---|---|
-| 0100 | Error Number | — |
-| 0101 | Operating State | — |
-| 0102 | Power Actual | W |
-| 0103 | Power Consumption Actual | W |
-| 0104 | Power Consumption Setpoint | W |
-
-### Heat Pump 1 — documented (Register Block 1000)
-
-| Register | Sensor | Unit |
-|---|---|---|
-| 1000 | Heat Pump Error State | — |
-| 1001 | Heat Pump Error Number | — |
-| 1002 | Heat Pump State | — |
-| 1003 | Operating State | — |
-| 1004 | Flow Line Temperature | °C |
-| 1005 | Return Line Temperature | °C |
-| 1006 | Volume Flow Heat Sink | L/h |
-| 1007 | Energy Source Inlet Temperature | °C |
-| 1008 | Energy Source Outlet Temperature | °C |
-| 1009 | Volume Flow Energy Source | L/min |
-| 1010 | Compressor Rating | % |
-| 1011 | Actual Heating Capacity | kW |
-| 1012 | Inverter Power Consumption | kW |
-| 1013 | COP | — |
-| 1019 | Relais state 2nd heating stage | 0/1 |
-| 1020 | Compressor Power Consumption Accumulated | kWh |
-| 1022 | Compressor Thermal Energy Output Accumulated | kWh |
-
-### Heat Pump 1 — undocumented (detected by Modbus scan)
-
-> ⚠️ These registers are **not** documented in the official Lambda Modbus
-> specification. Use at your own risk.
-
-<p align="center">
-  <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="400"/>
-</p>
+> ⚠️ Use at your own risk. No guarantee that the register assignments are
+> correct on every firmware version.
 
 | Register | Sensor | Unit | Panel Label |
 |---|---|---|---|
@@ -187,48 +144,14 @@ YAML itself works independently.
 | 1031 | EqM Rating | % | Energiequellen-Modulation |
 | 1032 | Expansion Valve Opening Angle | % | Öffnungswinkel |
 
-### Boiler 1 (Register Block 2000)
+<p align="center">
+  <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="400"/>
+</p>
 
-| Register | Sensor | Unit |
-|---|---|---|
-| 2000 | Error Number | — |
-| 2001 | Operating State | — |
-| 2002 | Temperature Actual High | °C |
-| 2003 | Temperature Actual Low | °C |
-| 2050 | Temperature Max (RW) | °C |
+## Climate Entities
 
-### Buffer 1 (Register Block 3000)
-
-| Register | Sensor | Unit |
-|---|---|---|
-| 3000 | Error Number | — |
-| 3001 | Operating State | — |
-| 3002 | Temperature Actual High | °C |
-| 3003 | Temperature Actual Low | °C |
-| 3004 | Modbus Buffer Temperature High (RW) | °C |
-| 3005 | Request Type (RW) | — |
-| 3006 | Request Flow Line Temperature Setpoint (RW) | °C |
-| 3007 | Request Return Line Temperature Setpoint (RW) | °C |
-| 3008 | Request Heat Sink Temperature Difference (RW) | K |
-| 3009 | Modbus Request Heating Capacity (RW) | kW |
-| 3050 | Set Maximum Buffer Temperature (RW) | °C |
-
-### Heating Circuit 1 (Register Block 5000)
-
-| Register | Sensor | Unit |
-|---|---|---|
-| 5000 | Error Number | — |
-| 5001 | Operating State | — |
-| 5002 | Flow Line Temperature | °C |
-| 5003 | Return Line Temperature | °C |
-| 5004 | Room Device Temperature (RW) | °C |
-| 5005 | Flow Line Temperature Setpoint (RW) | °C |
-| 5006 | Operating Mode (RW) | — |
-| 5050 | Set Flow Line Temperature Offset (RW) | K |
-| 5051 | Set Heating Mode Room Temperature (RW) | °C |
-| 5052 | Set Cooling Mode Room Temperature (RW) | °C |
-
-### Climate Entities
+Three `modbus.climates` entries expose RW registers as HA climate tiles so
+that temperatures and offsets can be adjusted directly from the dashboard.
 
 | Entity | Read Register | Write Register | Range |
 |---|---|---|---|
@@ -268,7 +191,7 @@ package. Contributions welcome.
 
 ## Documentation
 
-- Official Lambda Modbus specification (shipped with the controller) — dated 2025-02-13
+- [Lambda Modbus specification (PDF)](https://www.lambda-wp.at/fileadmin/userdaten/docs/downloads/regler/Modbus-Beschreibung-und-Protokoll.pdf) — official Lambda Wärmepumpen Modbus description and protocol, dated 2025-02-13
 - Reverse-engineered register mapping for the undocumented registers 1025-1032 is documented inline in `lambda_heatpump.yaml`
 
 ## Related Projects

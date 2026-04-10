@@ -4,7 +4,7 @@
 
 Initial release.
 
-- Full Modbus TCP integration for the Lambda EU-L series heat pumps (EU08L, EU13L, EU15L, EU20L, EU30L)
+- Full Modbus TCP integration for the Lambda EU-L series heat pumps (EU08L, EU13L, EU15L, EU20L)
 - 5 Ambient sensors (register block 0000)
 - 5 E-Manager sensors (register block 0100)
 - 17 Heat Pump 1 sensors (documented register block 1000, including heating capacity, compressor rating, COP and accumulated energy counters)
