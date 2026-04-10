@@ -76,7 +76,7 @@ control panel and every downstream system (evcc, Power Flow Card) expect.
 
 > **Language:** Entity names, comments and template descriptions are in
 > English. Panel-facing terminology (state mappings, climate entity names) is
-> deliberately kept in German because the Lambda control panel is German-only.
+> deliberately kept in German because the Lambda is primarily sold in German-speaking countries.
 
 ## Dashboard Card (optional)
 
