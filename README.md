@@ -93,8 +93,6 @@ button-card renders the buffer tank as an SVG with live temperature readings.
   <img src="images/dashboard_buffer_tank.png" alt="Buffer tank SVG" width="220"/>
   &nbsp;
   <img src="images/dashboard_all_entities.png" alt="All entities view" width="220"/>
-  &nbsp;
-  <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers" width="220"/>
 </p>
 
 **Usage:** Paste the contents of `dashboard_card.yaml` as a manual card (YAML)
