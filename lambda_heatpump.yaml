@@ -1,0 +1,1357 @@
+# Lambda Heat Pump Modbus/TCP Integration
+# based on Lambda Modbus specification dated 13.02.2025
+# Change name according to your requirements, host to the IP of your heatpump
+# 
+# the contents of this file needs to be appended to the configuration.yaml in your HA-installation
+# or saved in a folder named 'packages' for example as lambda_wp.yaml and then the following two lines 
+#
+# homeassistant:
+#   packages: !include_dir_named packages
+#
+# need to be added somewhere in the first lines of the configuration.yaml 
+#
+# order of definitions:
+#
+#- name: "EU20L Error Code Number"      # 1. WHO (used both for the name and entity-ID - name can be changed in the UI into a 'friendly_name' later)
+#  unique_id: eu20l_error_code_num      # 1. WHO (unique anchor in HA)
+#  
+#  address: 0000                        # 2. WHEREFROM (source / register number)
+#  input_type: holding                  # 2. WHEREFROM (type - optional when default 'holding')
+#
+#  data_type: int16                     # 3. HOW (how to interprete - should always be set for consistency and easier debugging)
+#  scale: 1                             # 3. HOW (factor - optional when '1')
+#  precision: 0                         # 3. HOW (precision - optional when '0')
+#
+#  device_class: temperature            # 4. DISPLAY (class defines the way HA displays the values in graphs and tiles)
+#  state_class: measurement             # 4. DISPLAY (kept by HA for long-term statistics)
+#  unit_of_measurement: "°C"            # 4. DISPLAY (unit)
+#
+#
+#  !!! Lambda heat pump owners with the latest Firmware V1.1.3 have reported that the word order of int32 registers has been changed !!!
+#  !!! Adding a 'swap: word' to some or all entities containing a 'data_type: int32' or 'data_type: uint32' might be necessary       !!!
+#
+#
+modbus:
+  - name: "EU20L" # The name you want to use for the ModBus Hub in Home Assistant. Important for example for Helpers or Automations writing to any registers directly
+    type: tcp
+    host: 192.168.2.6 ## IP address of your Lambda in your local network
+    port: 502
+
+    sensors:
+    #
+    ### EU20L General Ambient → Ambient
+    #
+      - name: "EU20L Ambient Error Number 0000" # name used here in a YAML defines de facto the entity-id of the sensor. The actual name can then be changed in the GUI keeping this ID, effectively making them BOTH searchable.
+        unique_id: eu20l_0000
+        address: 0000
+        data_type: int16
+        # input_type: holding # is the default and hence doesn't need to be set here
+        # state_class: total # is actually wrong here, since these values are error codes and not an accumulating statistical value such as power consumption
+        # scale: 1 # is the default and hence doesn't need to be set here
+        # precision: 0 # is the default for an INT16 and hence doesn't need to be set here
+        # scan_interval: 10 # default value is 15 in Home Assistant. Entry kept for later in case a faster or slower interval is needed
+        #
+      - name: "EU20L Ambient Operating State 0001" # 0 = OFF, 1 = AUTOMATIK, 2 = MANUAL, 3 = ERROR
+        unique_id: eu20l_0001
+        address: 0001
+        data_type: uint16
+        # device_class: enum # was recommendedb by Gemini to have HA automatically produce the right graphs. But is technically not correct
+        # scan_interval: 10
+        
+      - name: "EU20L Ambient Temperature Actual 0002" #RW Actual ambient temperature (min = -50.0°C; max = 80.0°C)
+        unique_id: eu20l_0002
+        address: 0002
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C" # units are better always put in quotation marks, because special characters such as % might crash the parser
+        # scan_interval: 10
+        
+      - name: "EU20L Ambient Temperature Average 1h 0003" # Arithmetic average temperature of the last 60 minutes
+        unique_id: eu20l_0003
+        address: 0003
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement # added to have a long-term statistic in HA
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L Ambient Temperature Calculated 0004" # Temperature for calculations in heat distribution modules
+        unique_id: eu20l_0004
+        address: 0004
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+    ### EU20L E-Manager → EMgr
+    #   deactivate this section (using comment delimiters) in case you have no E-Manager active
+
+      - name: "EU20L EMgr Error Number 0100" # not E-Manager, because then the search in HA would require to type E_Manager
+        unique_id: eu20l_0100
+        address: 100 # has to be written without the leading 0. If you write 0100 instead HA can't connect to the register
+        data_type: int16
+        # scan_interval: 10
+        
+      - name: "EU20L EMgr Operating State 0101" # 0 = OFF, 1 = AUTOMATIK, 2 = MANUAL, 3 = ERROR, 4 = OFFLINE
+        unique_id: eu20l_0101
+        address: 101 # has to be written without the leading 0. 
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L EMgr Power Actual 0102" # RW Actual input power [UINT16 (min = 0W; max = 65535W)] or actual excess power [INT16 (min = -32768W; max = 32767W)] (depends on settings in Module)
+        unique_id: eu20l_0102
+        address: 102 # has to be written without the leading 0. 
+        data_type: int16 # uint16 - depending on settings in Lambda control unit (Module) - use int16 if your HEMS sends surplus as negative values and uint16 if it sends it as positive values
+        device_class: power
+        state_class: measurement # recommended so that HA is creating a long-term statistic for the input values as well to compare with 0103 and 0104
+        unit_of_measurement: "W"
+        # scan_interval: 5
+        
+      - name: "EU20L EMgr Power Consumption Actual 0103" # Actual power consumption of all configurated heat pumps
+        unique_id: eu20l_0103
+        address: 103 # has to be written without the leading 0. 
+        data_type: int16
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        # scan_interval: 5
+        
+      - name: "EU20L EMgr Power Consumption Setpoint 0104" # Power consumption setpoint as a sum for all heat pumps
+        unique_id: eu20l_0104
+        address: 104 # has to be written without the leading 0. 
+        data_type: int16
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        # scan_interval: 10
+
+    ### EU20L Heat Pump 1 → HP1
+    #   for additonal heatpumps, this section needs to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
+    
+      - name: "EU20L HP1 Heat Pump Error State 1000" # 0 = NONE, 1 = MESSAGE, 2 = WARNING, 3 = ALARM, 4 = FAULT
+        unique_id: eu20l_1000
+        address: 1000
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Heat Pump Error Number 1001" # Scrolling through all active error numbers (Nr.1 - Nr.99)
+        unique_id: eu20l_1001
+        address: 1001
+        data_type: int16
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Heat Pump State 1002" # 0 = INIT,1 = REFERENCE,2 = RESTART-BLOCK,3 = READY,4 = START PUMPS,5 = START COMPRESSOR,6 = PRE-REGULATION,7 = REGULATION,8 = Not Used,9 = COOLING,10 = DEFROSTING,20 = STOPPING,30 = FAULT-LOCK,31 = ALARM-BLOCK,40 = ERROR-RESET
+        unique_id: eu20l_1002
+        address: 1002
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Operating State 1003" # 0 = STBY,1 = CH,2 = DHW,3 = CC,4 = CIRCULATE,5 = DEFROST,6 = AUS,7 = FROST,8 = STBY-FROST,9 = Not used,10 = SUMMER,11 = HOLIDAY,12 = ERROR,13 = WARNING,14 = INFO-MESSAGE,15 = TIME-BLOCK,16 = RELEASE-BLOCK,17 = MINTEMP-BLOCK,18 = FIRMWARE-DOWNLOAD
+        unique_id: eu20l_1003
+        address: 1003
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Flow Line Temperature 1004" # T-Flow - switched register name with register description on purpose since T-Flow isn't really helping in any HA search, when you're looking for the flow line temperature 
+        unique_id: eu20l_1004
+        address: 1004
+        data_type: int16
+        scale: 0.01
+        precision: 1 # one decimal place is sufficient for temperature. Lambda also only shows 39.3 °C and not 39.34 °C.
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Return Line Temperature 1005" # T-Return
+        unique_id: eu20l_1005
+        address: 1005
+        data_type: int16
+        scale: 0.01
+        precision: 1 # one decimal place is sufficient for temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Volume Flow Heat Sink 1006" # Volume flow heat sink
+        unique_id: eu20l_1006
+        address: 1006
+        data_type: int16
+        device_class: volume_flow_rate # was: volume
+        state_class: measurement # was: total
+        unit_of_measurement: "L/h"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Energy Source Inlet Temperature 1007" # T-EQin
+        unique_id: eu20l_1007
+        address: 1007
+        data_type: int16
+        scale: 0.01
+        precision: 1 # one decimal place is sufficient for temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Energy Source Outlet Temperature 1008" # T-EQout
+        unique_id: eu20l_1008
+        address: 1008
+        data_type: int16
+        scale: 0.01
+        precision: 1 # one decimal place is sufficient for temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Volume Flow Energy Source 1009" # Volume flow energy source - seems to be 0 all the time
+        unique_id: eu20l_1009
+        address: 1009
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        unit_of_measurement: "L/min"
+        device_class: volume_flow_rate # was: volume
+        state_class: measurement # was: total
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Compressor Rating 1010" # Compressor unit rating
+        unique_id: eu20l_1010
+        address: 1010
+        data_type: uint16
+        scale: 0.01
+        precision: 2
+        # device_class: power_factor # not correct class according to Gemini 3 Pro and ChatGPT 5.1 Pro
+        state_class: measurement
+        unit_of_measurement: "%"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Actual Heating Capacity 1011" # Qp heating
+        unique_id: eu20l_1011
+        address: 1011
+        data_type: int16
+        scale: 0.1
+        precision: 1        
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "kW"
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Inverter Power Consumption 1012" # Frequency inverter (FI) actual power consumption
+        unique_id: eu20l_1012
+        address: 1012
+        data_type: int16
+        scale: 0.001 # was: 1 - but needs to be adjusted due to change to kW (see 4 lines below)
+        precision: 3 # was: 0 - but needs to be adjusted as well to show three decimal digits
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "kW" # was: "W" - Original Output from the register is in W, but kW is what's used in all other systems (evcc, HA power flow card and even the Lambda Display Unit )
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 COP 1013" # Coefficient of performance
+        unique_id: eu20l_1013
+        address: 1013
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        # device_class: power_factor # device_class: power_factor is defined electrotechnical (Cosinus Phi) and expects values between 0 and 1 (or 0 to 100%)
+        state_class: measurement
+        # unit_of_measurement: "%" # The COP is a dimensionless number (unitless ratio / efficiency factor), not a percentage.
+        # scan_interval: 10
+        
+#
+# Register 1014: Modbus request release password - RW - UINT16 - [Nr] - Password register to release modbus request registers (maximum 10 retries are possieble)
+# not defined on purpose - including this register in the definitions for Home Assistant would make no sense
+
+#
+# Register 1015 to 1018 can be deactivated as well. They consistently only show a value of "0" and you probably never want to write to these registers using Modbus
+# If you comment register 1015 with a delimiter, also comment the template sensor below for mapping 1015 to texts
+#
+#        
+#      - name: "EU20L HP1 Request Type 1015" # RW - 0 = NO REQUEST, 1 = FLOW PUMP CIRCULATION, 2 = CENTRAL HEATING, 3 = CENTRAL COOLING, 4 = DOMESTIC HOT WATER
+#        unique_id: eu20l_1015
+#        address: 1015
+#        data_type: int16 # added for consistency
+#        # scan_interval: 10
+#        
+#      - name: "EU20L HP1 Requested Flow Line Temperature 1016" # RW - Requested flow line temperature. (min = 0.0°C, max = 70.0°C)
+#        unique_id: eu20l_1016
+#        address: 1016
+#        data_type: int16 # added for consistency
+#        scale: 0.1
+#        precision: 1
+#        device_class: temperature
+#        state_class: measurement # added for consistency and to keep the data in HA longer than 10 days
+#        unit_of_measurement: "°C"
+#        # scan_interval: 10
+#        
+#      - name: "EU20L HP1 Requested Return Line Temperature 1017" # RW - Requested return line temperature. (min = 0.0°C, max = 65.0°C)
+#        unique_id: eu20l_1017
+#        address: 1017
+#        data_type: int16 # added for consistency
+#        scale: 0.1
+#        precision: 1
+#        device_class: temperature
+#        state_class: measurement # added for consistency
+#        unit_of_measurement: "°C"
+#        # scan_interval: 10
+#        
+#      - name: "EU20L HP1 Requested Flow to Return Line Temperature Difference 1018" # RW - Request heat sink temp. diff - Requested temperature difference between flow line and return line. (min = 0.0K, max = 35.0K)
+#        unique_id: eu20l_1018
+#        address: 1018
+#        data_type: int16 # added for consistency
+#        scale: 0.1
+#        precision: 1
+#        device_class: temperature_delta # better class than temperature for this particular register
+#        state_class: measurement # added for consistency
+#        unit_of_measurement: "K" # Technically Kelvin is correct here and while HA might cause problems with class temperature, for temperature_delta "K" should be ok
+#        # scan_interval: 10
+        
+      - name: "EU20L HP1 Relais state 2nd heating stage 1019" # [0/1] - 1 = NO-Relais for 2nd heating stage (heating rod) is activated [Read Only]
+        # technically this definition could be changed to a 'binary_sensors:' in HA with 'device_class: heat' to automatically show ON or OFF in HA instead of numerical 0 or 1.
+        unique_id: eu20l_1019
+        address: 1019
+        data_type: int16 # added for consistency
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Compressor Power Consumption Accumulated 1020" # Statistic VdA E since last reset - Accumulated electrical energy consumption of compressor unit since last statistic reset
+        unique_id: eu20l_1020
+        address: 1020
+        data_type: int32
+        scale: 0.001 # was undefined (default = 1) - but needs to be adjusted because of the change from Wh to kWh
+        precision: 2 # was undefined(default = 0) - but needs to be adjusted for the same reason above to show two decimal points
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: "kWh" # was: "Wh" - Original output of the Register is in Wh, but who wants millions of Wh if you can have kWh?
+        # scan_interval: 10
+        
+      - name: "EU20L HP1 Compressor Thermal Energy Output Accumulated 1022" # Statistic VdA Q since last reset - Accumulated thermal energy output of compressor unit since last statistic reset
+        unique_id: eu20l_1022 # corrected - was 1023
+        address: 1022
+        data_type: int32
+        scale: 0.001 # was undefined (default = 1) - but needs to be adjusted because of the change from Wh to kWh
+        precision: 2 # was undefined(default = 0) - but needs to be adjusted for the same reason above to show two decimal points
+        device_class: energy
+        state_class: total_increasing
+        unit_of_measurement: "kWh" # was: "Wh" - Original output of the Register is in Wh, but who wants millions of Wh if you can have kWh?
+        # scan_interval: 10
+
+    #
+    #   for additonal heatpumps, all previous definitions for HP1 need to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
+    #
+
+    ### Additional Registers detected by a Modbus scan ###
+    #   These registers are NOT documented in the official Lambda Modbus definitions! Use at your own risk!
+
+#      - name: "EU20L HP1 unknown 1024" # RO - Undocumented and unknown register - can probably be deactivated or commented with delimiters
+#        unique_id: eu20l_1024
+#        address: 1024
+#        data_type: int16
+#        # scan_interval: 3600
+
+      - name: "EU20L HP1 VdA Max Rating 1025" # RO - Undocumented - value at Lambda control panel only available for users with level 3 or higher (Verdichteranlage: "Max. Rating")
+        unique_id: eu20l_1025
+        address: 1025
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        # device_class: power_factor # not recommended for similar reasons as for register 1010 (compressor unit rating)
+        state_class: measurement
+        unit_of_measurement: "%"
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Hot Gas Temperature 1026" # RO - Undocumented - value at Lambda control panel only available for users with level 3 or higher ("Heißgas")
+        unique_id: eu20l_1026
+        address: 1026
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"        
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Subcooling Temperature 1027" # RO - Undocumented - value at Lambda control panel only available for users with level 2 or higher ("Unterkühlung")
+        unique_id: eu20l_1027
+        address: 1027
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Suction Gas Temperature 1028" # RO - Undocumented - value at Lambda control panel only available for users with level 2 or higher ("Sauggas")
+        unique_id: eu20l_1028
+        address: 1028
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"        
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Condensation Temperature 1029" # RO - Undocumented - value at Lambda control panel only available for users with level 2 or higher ("Kondensation")
+        unique_id: eu20l_1029
+        address: 1029
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"        
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Evaporation Temperature 1030" # RO - Undocumented - value at Lambda control panel only available for users with level 2 or higher ("Verdampfung")
+        unique_id: eu20l_1030
+        address: 1030
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"        
+        # scan_interval: 10
+
+      - name: "EU20L HP1 EqM Rating 1031" # RO - Undocumented - value at Lambda main heatpump control panel as EqM ("Energiequellen-Motor oder -Modulation") and at panel Energy Source ("Energiequelle") as EqM-Rating.
+                                          # Effectively the percentage of the maximum possible fan speed. Example: fan speed = 260 rpm of max. 610 rpm = 42.6%
+        unique_id: eu20l_1031
+        address: 1031
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        # device_class: power_factor # not recommended for similar reasons as for register 1010 (compressor unit rating)
+        state_class: measurement
+        unit_of_measurement: "%"      
+        # scan_interval: 10
+
+      - name: "EU20L HP1 Expansion Valve Opening Angle 1032" # RO - Undocumented - value at Lambda control panel only available for users with level 2 or higher ("Öffnungswinkel")
+        unique_id: eu20l_1032
+        address: 1032
+        data_type: int16
+        scale: 0.01
+        precision: 2
+        # device_class: power_factor # not recommended for similar reasons as for register 1010 (compressor unit rating)
+        state_class: measurement
+        unit_of_measurement: "%"
+        # scan_interval: 10
+
+#      - name: "EU20L HP1 Unknown 1033" # RO - Undocumented and unknown register - can probably be deactivated or commented with delimiters
+#        unique_id: eu20l_1033
+#        address: 1033
+#        data_type: int16
+#        # scan_interval: 3600
+#
+#      - name: "EU20L HP1 Unknown 1050" # RO - Undocumented and unknown register - can probably be deactivated or commented with delimiters
+#        unique_id: eu20l_1050
+#        address: 1050
+#        data_type: int16
+#        # scan_interval: 3600
+#
+### Registers 1051 to 1059 represent values that are typically set ONCE by the installation company and then normally never changed again
+### Such as the maximum power output of the heat pump under certain conditions. You might adjust those values maybe after a full year of gaining
+### experience and do a little finetuning. But that's it. So for that the Lambda User panel is sufficient and neither read not write access is 
+### needed for Home Assistant. Hence I commented those registers with delimiters, because who needs a statistic of a full year of the same value?
+#
+#      - name: "EU20L HP1 Domestic Hot Water Power Output at 15°C 1051" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Brauchwasserbetrieb Abgabeleistung bei 15°C")
+#        unique_id: eu20l_1051
+#        address: 1051
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Min Power Output at 15°C 1052" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Min. Heizbetrieb Abgabeleistung bei 15°C")
+#        unique_id: eu20l_1052
+#        address: 1052
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Max Power Output at 15°C 1053" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Max. Heizbetrieb Abgabeleistung bei 15°C")
+#        unique_id: eu20l_1053
+#        address: 1053
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Min Power Output at 0°C 1054" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Min. Heizbetrieb Abgabeleistung bei 0°C")
+#        unique_id: eu20l_1054
+#        address: 1054
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Max Power Output at 0°C 1055" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Max. Heizbetrieb Abgabeleistung bei 0°C")
+#        unique_id: eu20l_1055
+#        address: 1055
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Min Power Output at -15°C 1056" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Min. Heizbetrieb Abgabeleistung bei -15°C")
+#        unique_id: eu20l_1056
+#        address: 1056
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Heating Max Power Output at -15°C 1057" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Max. Heizbetrieb Abgabeleistung bei -15°C")
+#        unique_id: eu20l_1057
+#        address: 1057
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Cooling Min Power Output 1058" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Min. Kühlbetrieb Abgabeleistung")
+#        unique_id: eu20l_1058
+#        address: 1058
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: "EU20L HP1 Cooling Max Power Output 1059" # RW - Undocumented - can probably be deactivated or commented with delimiters ("Max. Kühlbetrieb Abgabeleistung")
+#        unique_id: eu20l_1059
+#        address: 1059
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: power
+#        state_class: measurement
+#        unit_of_measurement: "kW"
+#        scan_interval: 3600 # relatively static value that will only be changed very few times if at all in the settings of the lambda
+#
+#      - name: EU20L HP1 unknown_1060 # RO - Undocumented and unknown register - can probably be deactivated or commented with delimiters
+#        unique_id: eu20l_1060
+#        address: 1060
+#        data_type: int16
+#        # scan_interval: 3600
+
+    ### EU20L Boiler 1 → Boil1 for better access in case of 2 or more boilers
+    #
+     
+      - name: "EU20L Boil1 Error Number 2000" # 0 = No Error
+        unique_id: eu20l_2000
+        address: 2000
+        data_type: int16
+        # scan_interval: 10
+        
+      - name: "EU20L Boil1 Operating State 2001" # 0 = STBY,1 = DHW,2 = LEGIO,3 = SUMMER,4 = FROST,5 = HOLIDAY,6 = PRIO-STOP,7 = ERROR,8 = OFF,9 = PROMPT-DHW,10 = TRAILING-STOP,11 = TEMP-LOCK,12 = STBY-FROST
+        unique_id: eu20l_2001
+        address: 2001
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L Boil1 Temperature Actual High 2002" # Actual temperature boiler high sensor
+        unique_id: eu20l_2002
+        address: 2002
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L Boil1 Temperature Actual Low 2003" # Actual temperature boiler low sensor
+        unique_id: eu20l_2003
+        address: 2003
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+#        # The following two boiler sensors (2004 and 2005) only make sense if you have a domestic hot water ("Brauchwasser") circulation pump connected to your Lambda directly and with a temperature sensor
+#        # If you don't, you can (should) deactivate these two definitions using comment delimiters
+#      - name: "EU20L Boil1 Circulation Temperature Actual 2004" # Actual temperature circulation sensor # added, because it was missing
+#        unique_id: eu20l_2004
+#        address: 2004
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: temperature
+#        state_class: measurement
+#        unit_of_measurement: "°C"
+#        # scan_interval: 10
+#
+#      - name: "EU20L Boil1 Circulation Pump State 2005" # Actual state of circulation pump [0 = OFF, 1 = ON] (could be redefined as binary_sensor as well) # added, because it was missing
+#        unique_id: eu20l_2005
+#        address: 2005
+#        data_type: int16
+#        # scan_interval: 10
+        
+      - name: "EU20L Boil1 Temperature Max 2050" # RW - Setting for maximum boiler temperature (min = 25.0°C; max = 65.0°C)
+        unique_id: eu20l_2050
+        address: 2050 #(expects every 5 min a value) [according to thecem - gemini 3 says the documentation mentiones 
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement # added for long-term statistics
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+    ### EU20L Buffer 1 → Buff1 for faster typing access in HA in case of more than one buffer
+    #
+      
+      - name: "EU20L Buff1 Error Number 3000" # 0 = No Error
+        unique_id: eu20l_3000
+        address: 3000
+        data_type: int16
+        # scan_interval: 10
+        
+      - name: "EU20L Buff1 Operating State 3001" # 0 = STBY,1 = HEATING,2 = COOLING,3 = SUMMER,4 = FROST,5 = HOLIDAY,6 = PRIO-STOP,7 = ERROR,8 = OFF,9 = STBY-FROST
+        unique_id: eu20l_3001
+        address: 3001
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L Buff1 Temperature Actual High 3002" # Actual temperature buffer high sensor
+        unique_id: eu20l_3002
+        address: 3002
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+                
+      - name: "EU20L Buff1 Temperature Actual Low 3003" # Actual temperature buffer low sensor
+        unique_id: eu20l_3003
+        address: 3003
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+                
+        # The following 5 buffer registers (3004 to 3009) are RW-registers and probably more usefull for write access than to be read. 
+        # You might want to simply deactive them by adding comment delimeters
+      - name: "EU20L Buff1 Modbus Buffer Temperature High 3004" # RW - Actual temperature of buffer set via modbus (min = 0°C; max = 90°C)
+        unique_id: eu20l_3004
+        address: 3004
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+      - name: "EU20L Buff1 Request Type 3005" # RW - -1 = INVALID REQUEST (can be used to deactivate modbus request immediately), 0 = NO, 1 = CIRCULATION ((is equal to NO REQUEST for buffer module), 2 = CENTRAL HEATING, 3 = CENTRAL COOLING
+        unique_id: eu20l_3005
+        address: 3005
+        data_type: int16
+        # scan_interval: 10
+
+      - name: "EU20L Buff1 Request Flow Line Temperature Setpoint 3006" # RW - Requested flow line temperature. (min = 0.0°C, max = 65.0°C) -> Valid value is reuqired!
+        unique_id: eu20l_3006
+        address: 3006
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+      - name: "EU20L Buff1 Request Return Line Temperature Setpoint 3007" # RW - Requested return line temperature. (min = 0.0°C, max = 60.0°C) -> Valid value is reuqired!
+        unique_id: eu20l_3007
+        address: 3007
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+      - name: "EU20L Buff1 Request Heat Sink Temperature Difference Setpoint 3008" # RW - Requested temperature difference between flow line and return line. (min = 0.0K, max = 35.0K) -> Valid value is required!
+        unique_id: eu20l_3008
+        address: 3008
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature_delta     # See note above (for register 1018)
+        state_class: measurement
+        unit_of_measurement: "K"            # See note above (for register 1018)
+        # scan_interval: 10
+
+      - name: "EU20L Buff1 Modbus Request Heating Capacity 3009" # capacity (min = 0.0kW, max = 25,5kW) -> Value is optional.
+        unique_id: eu20l_3009
+        address: 3009
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "kW"
+        # scan_interval: 10
+        
+        
+      - name: "EU20L Buff1 Set Maximum Buffer Temperature 3050" # RW - Setting for maximum buffer temperature (min = 25.0°C; max = 65.0°C)
+        unique_id: eu20l_3050
+        address: 3050 #(expects a value being written every 5 min [needs to be confirmed])
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+
+    ### EU20L Heating Circuit 1 → HC1 (for easier typing access in HA if HC2, HC3 etc. exist)
+    #   e.g. underfloor or radiator heating - for additonal heating circuits, this section needs to be duplicated, HC1 changed to HC2 and the second digit of the register address increased by 1
+      
+      - name: "EU20L HC1 Error Number 5000" # RO - 0 = No Error
+        unique_id: eu20l_5000
+        address: 5000
+        data_type: int16
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Operating State 5001" # RO - 0 = HEATING,1 = ECO,2 = COOLING,3 = FLOORDRY,4 = FROST,5 = MAX-TEMP,6 = ERROR,7 = SERVICE,8 = HOLIDAY,9 = CH-SUMMER,10 = CC-WINTER,11 = PRIO-STOP,12 = OFF,13 = RELEASE-OFF,14 = TIME-OFF,15 = STBY,16 = STBY-HEATING,17 = STBY-ECO,18 = STBY-COOLING,19 = STBY-FROST,20 = STBY-FLOORDRY
+        unique_id: eu20l_5001
+        address: 5001
+        data_type: uint16
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Flow Line Temperature 5002" # RO - Actual temperature flow line sensor
+        unique_id: eu20l_5002
+        address: 5002
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Return Line Temperature 5003" # RO - Actual temperature return line sensor
+        unique_id: eu20l_5003
+        address: 5003
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Room Device Temperature 5004" # RW - Actual temperature room device sensor (min = -29.9°C; max = 99.9°C) [can be used to regulate heat pump with any readable room temperature device]
+        unique_id: eu20l_5004
+        address: 5004
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Flow Line Temperature Setpoint 5005" # RW - Setpoint temperature flow line (min = 15.0°C; max = 65.0°C) [only applicable in MANUAL operating mode - see register 5006, but 1 is read-only over Modbus]
+        unique_id: eu20l_5005
+        address: 5005
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Operating Mode 5006" # RW - 0 = OFF(RW),1 = MANUAL(R),2 = AUTOMATIK(RW),3 = AUTO-HEATING(RW),4 = AUTO-COOLING(RW),5 = FROST(RW),6 = SUMMER(RW),7 = FLOOR-DRY(R) [setting to 1 or 7 requires using Lambda control panel]
+        unique_id: eu20l_5006
+        address: 5006
+        data_type: int16
+        # scan_interval: 10
+
+    ### Register 5007 can't be read (despite being a read-only [RO] register). Hence the sensor needs to be deactivated to avoid unnecessary modbus load.
+#       
+#      - name: "EU20L HC1 Flow Line Target Temperature 5007" # RO - Target temperature flow line [calculated target temp (see 5002) based on ambient temp (0004), room target temp (5051), heating curve and offset (5050)]
+#        unique_id: eu20l_5007
+#        address: 5007 # corrected - was 5005
+#        data_type: int16
+#        scale: 0.1
+#        precision: 1
+#        device_class: temperature
+#        state_class: measurement
+#        unit_of_measurement: "°C"
+#        # scan_interval: 10
+        
+      - name: "EU20L HC1 Set Flow Line Temperature Offset 5050" # RW - Setting for flow line temperature setpoint offset (min = -10.0K; max = 10.0K) ["Heizkurve Solltemp Offset"]
+        unique_id: eu20l_5050
+        address: 5050 #(expects every 5 min a value) - actually not true. see page 5 paragraph 3.3 of the Modbus documentation - the 5 min timout applies only to register 00-49!
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature_delta # see notes above for register 1018
+        state_class: measurement
+        unit_of_measurement: "K" # see notes above for register 1018
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Set Heating Mode Room Temperature 5051" # RW - Setting for heating mode room setpoint temperature (min = 15.0°C; max = 40.0 °C) [classic thermostat regulation]
+        unique_id: eu20l_5051
+        address: 5051
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+        
+      - name: "EU20L HC1 Set Cooling Mode Room Temperature 5052" # RW - Setting for cooling mode room setpoint temperature (min = 15.0°C; max = 40.0 °C) [same as 5051, but for cooling]
+        unique_id: eu20l_5052
+        address: 5052
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        # scan_interval: 10
+#
+### End of ModBus Definitions ###
+#
+    #
+    ### Definition of climate sensors for the dashboard to be able to easily adjust Lambda settings in HA (write to registers defined as RW)
+    #
+    
+    climates:
+      - name: "λ Heizkurve Solltemperatur Offset"
+        unique_id: lambda_hc1_offset_thermostat_id
+        address: 5050                # Wir lesen das Offset-Register (Ist-Zustand)
+        target_temp_register: 5050   # Wir schreiben auf das gleiche Register
+        data_type: int16
+        scale: 0.1
+        precision: 1
+        max_temp: 5.0
+        min_temp: -5.0
+        temp_step: 0.5
+        temperature_unit: "K"        # Kelvin unit (for temperature delta)
+        target_temp_write_registers: true  # for FC16
+        hvac_mode_register:
+          address: 5001              # Optional: so that "Auto/Heizen/Aus" can also be switched
+          values:
+            state_off: 12
+            state_heat: 0
+            state_auto: 1
+            state_cool: 2
+          #write_registers: true
+
+      - name: "λ Brauchwasser-Thermostat" # freely chosen name. Starting with the same term is recommended for easier searches in HA 
+        unique_id: EU20L_boil1_domestic_hot_water_id
+        address: 2002
+        data_type: int16          
+        min_temp: 45
+        max_temp: 54
+        scale: 0.1
+        precision: 1
+        target_temp_register: 2050
+        target_temp_write_registers: true
+        temp_step: 1
+        temperature_unit: "°C"
+
+      - name: "λ Raum-Thermostat" # Room thermostat - requires a WiFi thermometer in a living area. Can then theoretically replace a wired thermostat
+        unique_id: EU20L_HC1_domestic_hot_water_id
+        address: 5004 # IMPORTANT: this value must be written at least every 5 minutes, otherwise the Lambda falls back to default mode
+        min_temp: 15
+        max_temp: 35
+        #offset: 0 # in case the room thermometer consistently reads too high or too low
+        scale: 0.1
+        precision: 1
+        target_temp_register: 5051
+        target_temp_write_registers: true
+        temp_step: 0.5
+        temperature_unit: "°C"
+
+    #
+    ### Experiment with number entities to control the Lambda
+    # However, numbers: are still not accepted by the Modbus integration and simply ignored
+    # so this is useless and can be commented out
+    #
+    #numbers:
+    #  - name: "EU20L Heizkreis1 Heizkurve Offset Numbers"
+    #    unique_id: eu20l_hc1_5050_number
+    #    address: 5050
+    #    data_type: int16
+    #    scale: 0.1
+    #    min_value: -10.0   # Per docs page 13
+    #    max_value: 10.0    # Per docs page 13
+    #    step: 0.5          # Or 0.1, depending on how finely you want to control
+    #    mode: box          # 'box' (input field +/-) or 'slider'
+    #    unit_of_measurement: "K" # Offset is a difference, so Kelvin is physically correct (but °C works too)
+    #    #icon: mdi:thermometer-plus-minus
+    #    
+    #    # TEST ENTRY (please add):
+    #  - name: "EU20L Test Number"
+    #    address: 5051  # A different register for testing
+    #    data_type: int16
+    #    min_value: 0
+    #    max_value: 100
+    #
+    # end of numbers experiment
+
+    #
+    ### Create new template sensors to produce values that are important but not directly provided by Lambda through Modbus (e.g. SCOP)
+    #
+
+template:
+  - sensor:
+
+    ### Create a new sensor to calculate the SCOP based on values delivered by the Lambda heat pump ###
+
+      - name: "EU20L HP1 SCOP"
+        unique_id: eu20l_hp1_scop_id
+        state_class: measurement
+        icon: mdi:chart-bell-curve-cumulative
+        state: >
+          {% set strom_total = states('sensor.eu20l_hp1_compressor_power_consumption_accumulated_1020') | float(0) %}
+          {% set waerme_total = states('sensor.eu20l_hp1_compressor_thermal_energy_output_accumulated_1022') | float(0) %}
+          {% if strom_total > 0 %}
+            {{ (waerme_total / strom_total) | round(2) }}
+          {% else %}
+            0.0
+          {% endif %}
+          
+
+    ### Create a new sensor to calculate the Delta between Line flow and Return flow (Spreizung Vorlauf/Rücklauf)
+    
+      - name: "EU20L HP1 Heat Pump Line/Return Flow Delta (dT)"
+        unique_id: eu20l_hp1_heat_pump_line_return_flow_delta_dt_id
+        state_class: measurement
+        device_class: temperature_delta
+        unit_of_measurement: "K"
+        icon: mdi:thermometer-lines
+        state: >
+          {% set vl = states('sensor.eu20l_hp1_flow_line_temperature_1004') | float(0) %}
+          {% set rl = states('sensor.eu20l_hp1_return_line_temperature_1005') | float(0) %}
+          {{ (vl - rl) | round(1) }}
+
+    ### Create a new sensor to be able to calculate a better SCOP based on more exact base values (idea by thecem) ###
+      - name: "EU20L HP1 Heating Power calculated"
+        unique_id: eu20l_hp1_heating_power_calculated_id
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        state: >
+          {% set flow = states('sensor.eu20l_hp1_volume_flow_heat_sink_1006') | float(0) %}
+          {% set delta_t = states('sensor.eu20l_hp1_heat_pump_line_return_flow_delta_dt') | float(0) %}
+          
+          {# Calculation: flow * DeltaT * heat capacity of water (1.163) #}
+          {# We now also allow negative values for defrost cycles (Defrost or Central Cooling) #}
+          
+          {% if flow > 0 %}
+            {{ (flow * delta_t * 1.163) | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+    ### Create a new sensor to calculate the difference between the heating power provided by the heat pump and the calculated heating power (see above)
+    
+      - name: "EU20L HP1 Heating Power Difference"
+        unique_id: eu20l_hp1_heating_power_difference_id
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "kW"
+        state: >
+          {% set orig = states('sensor.eu20l_hp1_actual_heating_capacity_1011') | float(0) %}
+          {% set calc = states('sensor.eu20l_hp1_heating_power_calculated') | float(0) / 1000 %}
+          {{ (calc - orig) | round(3) }}
+
+    #
+    ### Mapping of the numbers (for the possible states, types or modes) to the respective terms as defined in the official Lambda documentation (e.g. 0 → OFF, 1 → AUTOMATIK etc.)
+    #
+
+    ### Mapping for EU20L Ambient Operating State Register 0001 ###
+      - name: "EU20L Ambient Operating State 0001 map"
+        unique_id: eu20l_0001_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'Aus',
+              '1' : 'Automatik',
+              '2' : 'Manuell',
+              '3' : 'Fehler' } %}
+          {% set state = states('sensor.eu20l_ambient_operating_state_0001') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:power-off',
+              '1' : 'mdi:refresh-auto',
+              '2' : 'mdi:hand-back-right',
+              '3' : 'mdi:alert-circle-outline' } %}
+          {% set state = states('sensor.eu20l_ambient_operating_state_0001') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for EU20L EMgr Operating State Register 0101 ###
+      - name: "EU20L EMgr Operating State 0101 map"
+        unique_id: eu20l_0101_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'Aus',
+              '1' : 'Automatik',
+              '2' : 'Manuell',
+              '3' : 'Fehler',
+              '4' : 'Offline' } %}
+          {% set state = states('sensor.eu20l_emgr_operating_state_0101') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:power-off',
+              '1' : 'mdi:refresh-auto',
+              '2' : 'mdi:hand-back-right',
+              '3' : 'mdi:alert-circle-outline',
+              '4' : 'mdi:network-off-outline' } %}
+          {% set state = states('sensor.eu20l_emgr_operating_state_0101') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for HP1 Heat Pump Error State Register 1000 ###
+      - name: "EU20L HP1 Heat Pump Error State 1000 map"
+        unique_id: eu20l_1000_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'OK',
+              '1' : 'MESSAGE',
+              '2' : 'WARNING',
+              '3' : 'ALARM',
+              '4' : 'FAULT' } %}
+          {% set state = states('sensor.eu20l_hp1_heat_pump_error_state_1000') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:check-circle-outline',
+              '1' : 'mdi:message-text-outline',
+              '2' : 'mdi:alert-outline',
+              '3' : 'mdi:bell-alert',
+              '4' : 'mdi:alert-octagon' } %}
+          {% set state = states('sensor.eu20l_hp1_heat_pump_error_state_1000') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for HP1 Heat Pump State Register 1002 - as displayed in the bottom row of the Lambda panel "Wärmepumpe" ###
+      - name: "EU20L HP1 Heat Pump State 1002 map"
+        unique_id: eu20l_1002_map # added for consistency
+        state: >-
+          {% set mapper =  {
+              '0' : 'INIT',
+              '1' : 'REFERENCE',
+              '2' : 'Sperrzeit',
+              '3' : 'Betriebsbereit',
+              '4' : 'Vorlaufbetrieb',
+              '5' : 'Verdichterstart',
+              '6' : 'Vorregelbetrieb',
+              '7' : 'Regelbetrieb',
+              '8' : 'Not Used',
+              '9' : 'Kühlen',
+              '10' : 'Abtauung',
+              '20' : 'STOPPING',
+              '30' : 'FAULT-LOCK',
+              '31' : 'ALARM-BLOCK',
+              '40' : 'ERROR-RESET' } %}
+          {% set state = states('sensor.eu20l_hp1_heat_pump_state_1002') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:heat-pump-outline',
+              '1' : 'mdi:heat-pump-outline',
+              '2' : 'mdi:timer-pause-outline',
+              '3' : 'mdi:timer-stop-outline',
+              '4' : 'mdi:restart',
+              '5' : 'mdi:restart',
+              '6' : 'mdi:heat-pump-outline',
+              '7' : 'mdi:heat-pump-outline',
+              '8' : 'mdi:help-circle-outline',
+              '9' : 'mdi:sun-snowflake-variant',
+              '10' : 'mdi:snowflake-melt',
+              '20' : 'mdi:stop-circle-outline',
+              '30' : 'mdi:alert-circle-outline',
+              '31' : 'mdi:alarm-light-outline',
+              '40' : 'mdi:alarm-light-off-outline' } %}
+          {% set state = states('sensor.eu20l_hp1_heat_pump_state_1002') %}
+          {{ mapper[state] if state in mapper else '' }}
+
+    ### Mapping for HP1 Heat Pump Operating State Register 1003 ###
+      - name: "EU20L HP1 Heat Pump Operating State 1003 map"
+        unique_id: eu20l_1003_map # added for consistency
+        state: >-
+          {% set mapper = {
+              '0' : 'Standby',
+              '1' : 'Heizen',
+              '2' : 'Brauchwasser',
+              '3' : 'CC / Verdichterbetrieb',
+              '4' : 'Umwälzbetrieb',
+              '5' : 'Abtauen',
+              '6' : 'Aus',
+              '7' : 'FrostschutzbetriebT',
+              '8' : 'Frostschutzbereitschaft',
+              '9' : 'Not used',
+              '10' : 'Sommerbetrieb',
+              '11' : 'Ferienbetrieb',
+              '12' : 'Fehler',
+              '13' : 'Warnung',
+              '14' : 'INFO-MESSAGE',
+              '15' : 'TIME-BLOCK',
+              '16' : 'RELEASE-BLOCK',
+              '17' : 'MINTEMP-BLOCK',
+              '18' : 'FIRMWARE-DOWNLOAD' } %}
+          {% set state = states('sensor.eu20l_hp1_operating_state_1003') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper = {
+              '0' : 'mdi:power-standby',
+              '1' : 'mdi:fire',
+              '2' : 'mdi:water-thermometer-outline',
+              '3' : 'mdi:sun-snowflake-variant',
+              '4' : 'mdi:pump',
+              '5' : 'mdi:snowflake-melt',
+              '6' : 'mdi:power-off',
+              '7' : 'mdi:snowflake-thermometer',
+              '8' : 'mdi:snowflake-alert',
+              '9' : 'mdi:help-circle-outline',
+              '10' : 'mdi:sun-thermometer-outline',
+              '11' : 'mdi:bag-suitcase-outline',
+              '12' : 'mdi:alert-circle-outline',
+              '13' : 'mdi:alert-outline',
+              '14' : 'mdi:information-outline',
+              '15' : 'mdi:timer-lock-outline',
+              '16' : 'mdi:lock-alert',
+              '17' : 'mdi:thermometer-low',
+              '18' : 'mdi:cloud-download' } %}
+          {% set state = states('sensor.eu20l_hp1_operating_state_1003') %}
+          {{ mapper[state] if state in mapper else '' }}
+
+# IF register 1015 is commented with a delimiter, you can apply the same procedure for this sensor mapping register 1015
+#
+#    ### Mapping for EU20L HP1 Request Type Register 1015 - WP Anforderungsart ###
+#      - name: "EU20L HP1 Request Type 1015 map"
+#        unique_id: eu20l_1015_map
+#        state: >-
+#          {% set mapper =  {
+#              '0' : 'Keine Anforderung',
+#              '1' : 'FLOW PUMP CIRCULATION',
+#              '2' : 'CENTRAL HEATING',
+#              '3' : 'CENTRAL COOLING',
+#              '4' : 'DOMESTIC HOT WATER' } %}
+#          {% set state = states('sensor.eu20l_hp1_request_type_1015') %}
+#          {{ mapper[state] if state in mapper else 'Unknown' }}
+#        icon: >-
+#          {% set mapper =  {
+#              '0' : 'mdi:power-standby',
+#              '1' : 'mdi:pump',
+#              '2' : 'mdi:radiator',
+#              '3' : 'mdi:snowflake',
+#              '4' : 'mdi:water-boiler' } %}
+#          {% set state = states('sensor.eu20l_hp1_request_type_1015') %}
+#          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for EU20L Boil1 Operating State Register 2001 - Brauchwasser Betriebsart ###
+      - name: "EU20L Boil1 Operating State 2001 map"
+        unique_id: eu20l_2001_map # added for consistency
+        state: >-
+          {% set mapper =  {
+              '0' : 'Standby',
+              '1' : 'Brauchwasser',
+              '2' : 'LEGIO',
+              '3' : 'Sommerbetrieb',
+              '4' : 'FROST',
+              '5' : 'HOLIDAY',
+              '6' : 'PRIO-STOP',
+              '7' : 'Fehler',
+              '8' : 'Aus',
+              '9' : 'PROMPT-DHW',
+              '10' : 'TRAILING-STOP',
+              '11' : 'TEMP-LOCK',
+              '12' : 'STBY-FROST' } %}
+          {% set state = states('sensor.eu20l_boil1_operating_state_2001') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:power-standby',
+              '1' : 'mdi:water-plus-outline',
+              '2' : 'mdi:water-thermometer-outline',
+              '3' : 'mdi:sun-thermometer-outline',
+              '4' : 'mdi:snowflake-thermometer',
+              '5' : 'mdi:bag-suitcase-outline',
+              '6' : 'mdi:timer-stop-outline',
+              '7' : 'mdi:alert-outline',
+              '8' : 'mdi:water-boiler-off',
+              '9' : 'mdi:water-thermometer-outline',
+              '10' : 'mdi:timer-stop-outline',
+              '11' : 'mdi:thermometer-alert',
+              '12' : 'mdi:snowflake-thermometer' } %}
+          {% set state = states('sensor.eu20l_boil1_operating_state_2001') %}
+          {{ mapper[state] if state in mapper else '' }}
+
+    ### Mapping for EU20L Buff1 Operating State Register 3001 - Puffer Betriebsart ###
+      - name: "EU20L Buff1 Operating State 3001 map"
+        unique_id: eu20l_3001_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'Standby',
+              '1' : 'Heizen',
+              '2' : 'Kühlen',
+              '3' : 'Sommerbetrieb',
+              '4' : 'FROST',
+              '5' : 'HOLIDAY',
+              '6' : 'PRIO-STOP',
+              '7' : 'Fehler',
+              '8' : 'Aus',
+              '9' : 'STBY-FROST' } %}
+          {% set state = states('sensor.eu20l_buff1_operating_state_3001') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:power-standby',
+              '1' : 'mdi:fire',
+              '2' : 'mdi:snowflake',
+              '3' : 'mdi:sun-thermometer-outline',
+              '4' : 'mdi:snowflake-thermometer',
+              '5' : 'mdi:bag-suitcase-outline',
+              '6' : 'mdi:timer-pause-outline',
+              '7' : 'mdi:alert-circle-outline',
+              '8' : 'mdi:power-off',
+              '9' : 'mdi:snowflake-alert'
+              } %}
+          {% set state = states('sensor.eu20l_buff1_operating_state_3001') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for EU20L HC1 Operating State Register 5001 - Heizkreis Betriebsart ###
+      - name: "EU20L HC1 Operating State 5001 map"
+        unique_id: eu20l_5001_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'Heizen',
+              '1' : 'Eco',
+              '2' : 'COOLING',
+              '3' : 'FLOORDRY',
+              '4' : 'FROST',
+              '5' : 'MAX-TEMP',
+              '6' : 'ERROR',
+              '7' : 'SERVICE',
+              '8' : 'HOLIDAY',
+              '9' : 'CH-SUMMER',
+              '10' : 'CC-WINTER',
+              '11' : 'PRIO-STOP',
+              '12' : 'Aus',
+              '13' : 'RELEASE-OFF',
+              '14' : 'TIME-OFF',
+              '15' : 'STBY',
+              '16' : 'STBY-HEATING',
+              '17' : 'STBY-ECO',
+              '18' : 'STBY-COOLING',
+              '19' : 'STBY-FROST',
+              '20' : 'STBY-FLOORDRY' } %}
+          {% set state = states('sensor.eu20l_hc1_operating_state_5001') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:fire',
+              '1' : 'mdi:leaf',
+              '2' : 'mdi:snowflake',
+              '3' : 'mdi:fan-remove',
+              '4' : 'mdi:snowflake-alert',
+              '5' : 'mdi:thermometer-high',
+              '6' : 'mdi:alert-circle-outline',
+              '7' : 'mdi:wrench',
+              '8' : 'mdi:bag-suitcase-outline',
+              '9' : 'mdi:weather-sunny',
+              '10' : 'mdi:weather-snowy',
+              '11' : 'mdi:timer-pause-outline',
+              '12' : 'mdi:power-off',
+              '13' : 'mdi:lock-off',
+              '14' : 'mdi:clock-remove-outline',
+              '15' : 'mdi:power-standby',
+              '16' : 'mdi:radiator-off',
+              '17' : 'mdi:leaf-off',
+              '18' : 'mdi:snowflake-off',
+              '19' : 'mdi:snowflake-alert',
+              '20' : 'mdi:fan-off'
+              } %}
+          {% set state = states('sensor.eu20l_hc1_operating_state_5001') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+    ### Mapping for EU20L HC1 Operating Mode Register 5006 - Heizkreis Betriebsmodus ###
+      - name: "EU20L HC1 Operating Mode 5006 map"
+        unique_id: eu20l_5006_map
+        state: >-
+          {% set mapper =  {
+              '0' : 'OFF',
+              '1' : 'MANUAL',
+              '2' : 'AUTOMATIK',
+              '3' : 'AUTO-HEATING',
+              '4' : 'AUTO-COOLING',
+              '5' : 'FROST',
+              '6' : 'SUMMER',
+              '7' : 'FLOOR-DRY' } %}
+          {% set state = states('sensor.eu20l_hc1_operating_mode_5006') %}
+          {{ mapper[state] if state in mapper else 'Unknown' }}
+        icon: >-
+          {% set mapper =  {
+              '0' : 'mdi:power-off',
+              '1' : 'mdi:hand-back-right',
+              '2' : 'mdi:mdi:refresh-auto',
+              '3' : 'mdi:radiator',
+              '4' : 'mdi:snowflake',
+              '5' : 'mdi:snowflake-alert',
+              '6' : 'mdi:weather-sunny',
+              '7' : 'mdi:fan-remove'
+              } %}
+          {% set state = states('sensor.eu20l_hc1_operating_mode_5006') %}
+          {{ mapper[state] if state in mapper else 'mdi:help-circle' }}
+
+
+      # EG HK Delta T
+      #- name: "EG HK Delta T"
+      #  unit_of_measurement: "K"
+      #  device_class: temperature
+      #  state: >
+      #    {{
+      #      (
+      #        (states('sensor.eu20l_heating_circuit_1_temp_flow')|float) -
+      #        (states('sensor.eu20l_heating_circuit_1_temp_return')|float)
+      #      ) |round(2)
+      #    }}

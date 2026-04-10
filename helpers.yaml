@@ -1,0 +1,149 @@
+# Home Assistant Template Helpers for Lambda EU20L Heat Pump
+# ===========================================================
+# These helpers complement lambda_heatpump.yaml (the main Modbus package).
+#
+# INSTALLATION
+# ------------
+# Copy this file to /config/packages/ together with lambda_heatpump.yaml.
+# The package loader needs to be enabled in configuration.yaml:
+#
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# The template sensors below reference sensors that are defined in
+# lambda_heatpump.yaml. Both files must be loaded for these templates
+# to work.
+#
+# NAMING
+# ------
+# The display names (`name:`) are deliberately kept in German because
+# Lambda is an Austrian manufacturer and its panel terminology is German.
+# You can rename entities via the HA UI later without breaking references,
+# since entity IDs are pinned via `unique_id`.
+#
+# PLANNED
+# -------
+# Additional templates for JAZ/MAZ/TAZ (yearly/monthly/daily COP) are
+# planned but not yet included, because they depend on a longer chain
+# of utility_meter helpers and integration helpers that are not part
+# of this package. Contributions welcome.
+
+template:
+
+  ###########################################################################
+  # Compressor speed (rpm)
+  # -----------------------
+  # Derived from the compressor rating percentage (Modbus register 1010).
+  # Assumes a maximum speed of 5500 rpm.
+  ###########################################################################
+  - sensor:
+      - name: "λ Wärmepumpe Verdichter Drehzahl"
+        unique_id: l_warmepumpe_verdichter_drehzahl
+        state: >
+          {{ (states('sensor.eu20l_hp1_compressor_rating_1010') | float(0) * 5500 / 100) | int(0) }}
+        unit_of_measurement: "rpm"
+        state_class: measurement
+        icon: mdi:car-turbocharger
+
+  ###########################################################################
+  # Heat charge pump control percentage (HLP)
+  # -----------------------------------------
+  # Piecewise linear interpolation from heat sink volume flow (L/h,
+  # Modbus register 1006) to the control percentage of an IMP NMT MAX II
+  # circulation pump ("Heizladepumpe").
+  #
+  # !!! IMPORTANT !!!
+  # The 15 calibration points below were measured empirically on a specific
+  # IMP NMT MAX II pump. They do NOT apply to other pump models or IMP
+  # variants. If you use a different circulation pump, either:
+  #   a) re-measure the flow → control percentage curve for your pump, or
+  #   b) remove this template sensor entirely.
+  ###########################################################################
+      - name: "λ Wärmepumpe Heizladepumpe Regelung (HLP)"
+        unique_id: l_warmepumpe_heizladepumpe_regelung_hlp
+        state: |
+          {% set v = states('sensor.eu20l_hp1_volume_flow_heat_sink_1006') | float(0) %}
+
+          {# Calibration points IMP NMT MAX II #}
+          {# 0    -> 0.0 #}
+          {# 1280 -> 15.0 #}
+          {# 1461 -> 18.3 #}
+          {# 1987 -> 27.9 #}
+          {# 2002 -> 28.1 #}
+          {# 2108 -> 30.4 #}
+          {# 2182 -> 31.7 #}
+          {# 2513 -> 40.0 #}
+          {# 2754 -> 51.4 #}
+          {# 3040 -> 60.2 #}
+          {# 3235 -> 67.1 #}
+          {# 3641 -> 82.8 #}
+          {# 3851 -> 88.9 #}
+          {# 3896 -> 90.0 #}
+          {# 4017 -> 100.0 #}
+
+          {% if v <= 0 %}
+            0.0
+          {% elif v <= 1280 %}
+            {{ (v - 0) * (15.0 - 0) / (1280 - 0) + 0 }}
+          {% elif v <= 1461 %}
+            {{ (v - 1280) * (18.3 - 15.0) / (1461 - 1280) + 15.0 }}
+          {% elif v <= 1987 %}
+            {{ (v - 1461) * (27.9 - 18.3) / (1987 - 1461) + 18.3 }}
+          {% elif v <= 2002 %}
+            {{ (v - 1987) * (28.1 - 27.9) / (2002 - 1987) + 27.9 }}
+          {% elif v <= 2108 %}
+            {{ (v - 2002) * (30.4 - 28.1) / (2108 - 2002) + 28.1 }}
+          {% elif v <= 2182 %}
+            {{ (v - 2108) * (31.7 - 30.4) / (2182 - 2108) + 30.4 }}
+          {% elif v <= 2513 %}
+            {{ (v - 2182) * (40.0 - 31.7) / (2513 - 2182) + 31.7 }}
+          {% elif v <= 2754 %}
+            {{ (v - 2513) * (51.4 - 40.0) / (2754 - 2513) + 40.0 }}
+          {% elif v <= 3040 %}
+            {{ (v - 2754) * (60.2 - 51.4) / (3040 - 2754) + 51.4 }}
+          {% elif v <= 3235 %}
+            {{ (v - 3040) * (67.1 - 60.2) / (3235 - 3040) + 60.2 }}
+          {% elif v <= 3641 %}
+            {{ (v - 3235) * (82.8 - 67.1) / (3641 - 3235) + 67.1 }}
+          {% elif v <= 3851 %}
+            {# intermediate step in the high-load range #}
+            {{ (v - 3641) * (88.9 - 82.8) / (3851 - 3641) + 82.8 }}
+          {% elif v <= 3896 %}
+            {# fine adjustment shortly before full load #}
+            {{ (v - 3851) * (90.0 - 88.9) / (3896 - 3851) + 88.9 }}
+          {% elif v <= 4017 %}
+            {# final stretch from 90% to 100% #}
+            {{ (v - 3896) * (100.0 - 90.0) / (4017 - 3896) + 90.0 }}
+          {% else %}
+            100.0
+          {% endif %}
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:play-circle-outline
+
+  ###########################################################################
+  # Collective fault (Sammelstoerung)
+  # ---------------------------------
+  # Returns 'on' (problem) if any of the six Lambda error number registers
+  # reports a non-zero value. Covers the following modules:
+  #   - Ambient  (register 0000)
+  #   - EMgr     (register 0100)
+  #   - HP1      (register 1001)
+  #   - Boil1    (register 2000)
+  #   - Buff1    (register 3000)
+  #   - HC1      (register 5000)
+  ###########################################################################
+  - binary_sensor:
+      - name: "Lambda Sammelstörung"
+        unique_id: lambda_sammelstoerung
+        device_class: problem
+        state: >
+          {{
+            states('sensor.eu20l_ambient_error_number_0000')    | int(0) > 0 or
+            states('sensor.eu20l_emgr_error_number_0100')       | int(0) > 0 or
+            states('sensor.eu20l_hp1_heat_pump_error_number_1001') | int(0) > 0 or
+            states('sensor.eu20l_boil1_error_number_2000')      | int(0) > 0 or
+            states('sensor.eu20l_buff1_error_number_3000')      | int(0) > 0 or
+            states('sensor.eu20l_hc1_error_number_5000')        | int(0) > 0
+          }}
+        icon: mdi:alert-circle-outline

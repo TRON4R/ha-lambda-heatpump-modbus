@@ -1,0 +1,341 @@
+type: custom:vertical-stack-in-card
+cards:
+  - type: heading
+    heading: λ  EU20L Wärmepumpe
+    heading_style: title
+    icon: mdi:heat-pump-outline
+    badges:
+      - type: entity
+        entity: sensor.eu20l_hp1_heat_pump_operating_state_1003_map
+    card_mod:
+      style: |
+        ha-icon {
+          color: green !important;
+        }
+  - type: horizontal-stack
+    cards:
+      - type: gauge
+        entity: sensor.eu20l_hp1_actual_heating_capacity_1011
+        name: λ Heizleistung
+        unit: kW
+        min: 0
+        max: 24
+        needle: true
+        severity:
+          green: 0
+          yellow: 10
+          red: 20
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+      - type: gauge
+        entity: sensor.eu20l_hp1_inverter_power_consumption_1012
+        unit: kW
+        min: 0
+        max: 10
+        severity:
+          green: 0
+          yellow: 3
+          red: 5
+        needle: true
+        name: λ Stromverbrauch
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+      - type: gauge
+        entity: sensor.eu20l_hp1_cop_1013
+        name: λ COP
+        min: 1
+        max: 10
+        needle: true
+        segments:
+          - from: 1
+            color: "#ef5350"
+          - from: 2
+            color: "#ff9800"
+          - from: 3
+            color: "#ffd54f"
+          - from: 4.5
+            color: "#66bb6a"
+          - from: 7
+            color: "#2e7d32"
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+  - type: horizontal-stack
+    cards:
+      - type: gauge
+        entity: sensor.l_warmepumpe_verdichter_drehzahl
+        name: Verdichter Drehzahl
+        unit: rpm
+        min: 0
+        max: 5500
+        severity:
+          green: 0
+          yellow: 4000
+          red: 5000
+        needle: true
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+      - type: gauge
+        entity: sensor.l_warmepumpe_heizladepumpe_regelung_hlp
+        unit: "%"
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 80
+          red: 90
+        needle: true
+        name: λ HLP Regelung
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+      - type: gauge
+        entity: sensor.eu20l_hp1_volume_flow_heat_sink_1006
+        unit: L/h
+        min: 0
+        max: 4000
+        severity:
+          green: 0
+          yellow: 3500
+          red: 3800
+        needle: true
+        name: λ HLP Durchfluss
+        card_mod:
+          style: |
+            ha-card {
+              border: none !important;
+              box-shadow: none !important;
+            }
+  - type: custom:button-card
+    name: Warmwasserspeicher
+    show_name: true
+    show_state: false
+    show_icon: false
+    layout: vertical
+    styles:
+      grid:
+        - grid-template-areas: "\"n\" \"tank\""
+        - grid-template-columns: 1fr
+        - grid-template-rows: min-content 1fr
+        - justify-items: center
+      card:
+        - padding: 16px
+        - margin-top: 6px
+        - border-radius: 12px
+        - border: none
+        - box-shadow: none
+      name:
+        - font-size: 18px
+        - font-weight: 500
+        - color: var(--primary-text-color)
+        - padding-bottom: 8px
+      custom_fields:
+        tank:
+          - width: 100%
+          - display: flex
+          - justify-content: center
+    custom_fields:
+      tank: |
+        [[[
+          /* ── Textfarben Tank innen ── */
+          var farbeTitel = 'rgba(255,255,255,0.85)';
+          var farbeLabel = 'rgba(255,255,255,0.8)';
+          var farbeWert = '#fff';
+
+          /* ── Farben VL/RL außen ── */
+          var farbeVL = '#FF0000';
+          var farbeRL = '#0000FF';
+          var farbeAussenText = '#000';
+          var farbeAussenLabel = '#444';
+
+          /* ── Farbschwellen Tankgradient ── */
+          var stufen = [
+            [52, '#b71c1c'],   // dunkelrot - sehr heiß
+            [50, '#d32f2f'],   // rot
+            [48, '#ef5350'],   // hellrot
+            [46, '#ff7043'],   // rot-orange
+            [44, '#e57383'],   // gedämpftes rot
+            [42, '#ab47bc'],   // violett
+            [38, '#7e57c2'],   // blau-violett
+            [30, '#5c6bd0'],   // indigo
+            [20, '#3030f0'],   // dunkleres indigo
+            [0,  '#2020c0']    // tiefes dunkelblau - kalt
+          ];
+
+          /* ── Sensorwerte Tank ── */
+          var bwo = parseFloat(states['sensor.eu20l_boil1_temperature_actual_high_2002'].state) || 0;
+          var bwu = parseFloat(states['sensor.eu20l_boil1_temperature_actual_low_2003'].state) || 0;
+          var pfo = parseFloat(states['sensor.eu20l_buff1_temperature_actual_high_3002'].state) || 0;
+          var pfu = parseFloat(states['sensor.eu20l_buff1_temperature_actual_low_3003'].state) || 0;
+
+          /* ── Sensorwerte Wärmepumpe (links) ── */
+          var wpVL = parseFloat(states['sensor.eu20l_hp1_flow_line_temperature_1004'].state) || 0;
+          var wpRL = parseFloat(states['sensor.eu20l_hp1_return_line_temperature_1005'].state) || 0;
+
+          /* ── Sensorwerte Heizkreis 1 (rechts) ── */
+          var hkVL = parseFloat(states['sensor.eu20l_hc1_flow_line_temperature_5002'].state) || 0;
+          var hkRL = parseFloat(states['sensor.eu20l_hc1_return_line_temperature_5003'].state) || 0;
+
+          /* ── Betriebszustände ── */
+          var wpBetrieb = states['sensor.eu20l_hp1_heat_pump_operating_state_1003_map'].state || '?';
+          var wpZustand = states['sensor.eu20l_hp1_heat_pump_state_1002_map'].state || '?';
+
+          /* ── Außentemperatur ── */
+          var aussenTemp = parseFloat(states['sensor.eu20l_ambient_temperature_actual_0002'].state) || 0;
+
+          function tc(t) {
+            for (var i = 0; i < stufen.length; i++) {
+              if (t >= stufen[i][0]) return stufen[i][1];
+            }
+            return '#1565c0';
+          }
+
+          var c1 = tc(bwo);
+          var c2 = tc(bwu);
+          var c3 = tc(pfo);
+          var c4 = tc(pfu);
+
+          var html = '';
+          html += '<div style="display:flex;justify-content:center;align-items:center;padding:8px 0;width:100%;gap:0;">';
+
+          /* ── Linke Seite: Status + Wärmepumpe ── */
+          html += '<div style="display:flex;flex-direction:column;align-items:center;gap:0px;padding-right:4px;min-width:90px;position:relative;">';
+          /* Betriebszustand oben links - absolut positioniert, verschiebt nichts */
+          html += '<div style="position:absolute;top:-80px;left:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;">';
+          html += '<div style="font-size:14px;font-weight:500;color:var(--primary-text-color);">' + wpBetrieb + '</div>';
+          html += '<div style="font-size:14px;font-weight:500;color:var(--primary-text-color);">' + wpZustand + '</div>';
+          html += '</div>';
+          /* Icon + Titel */
+          html += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">';
+          html += '<ha-icon icon="mdi:heat-pump-outline" style="--mdi-icon-size:20px;color:' + farbeAussenLabel + ';width:20px;height:20px;"></ha-icon>';
+          html += '<span style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;font-weight:500;">Wärmepumpe</span>';
+          html += '</div>';
+          /* VL */
+          html += '<div style="text-align:center;margin-top:7px;">';
+          html += '<div style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;">Vorlauf</div>';
+          html += '<div style="font-size:18px;font-weight:400;color:' + farbeVL + ';">' + wpVL.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          /* RL */
+          html += '<div style="text-align:center;margin-top:59px;">';
+          html += '<div style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;">Rücklauf</div>';
+          html += '<div style="font-size:18px;font-weight:400;color:' + farbeRL + ';">' + wpRL.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          html += '</div>';
+
+          /* ── Mitte: Tank ── */
+          html += '<div style="position:relative;width:200px;height:340px;flex-shrink:0;">';
+          html += '<svg viewBox="0 0 200 340" style="width:100%;height:100%;">';
+          html += '<defs>';
+          html += '<linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">';
+          html += '<stop offset="0%" stop-color="' + c1 + '"/>';
+          html += '<stop offset="35%" stop-color="' + c2 + '"/>';
+          html += '<stop offset="60%" stop-color="' + c3 + '"/>';
+          html += '<stop offset="100%" stop-color="' + c4 + '"/>';
+          html += '</linearGradient>';
+          html += '</defs>';
+
+          /* Tank body */
+          html += '<rect x="20" y="20" width="160" height="300" rx="24" fill="url(#tg)"/>';
+          html += '<rect x="20" y="20" width="160" height="300" rx="24" fill="none" stroke="#ccc" stroke-width="1.2"/>';
+          html += '<line x1="32" y1="170" x2="168" y2="170" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="6,4"/>';
+
+          /* Beschriftungen im Tank */
+          html += '<text x="100" y="50" text-anchor="middle" fill="' + farbeTitel + '" font-size="14" font-weight="500" letter-spacing="1.5" font-family="Roboto,sans-serif">BRAUCHWASSER</text>';
+          html += '<text x="100" y="192" text-anchor="middle" fill="' + farbeTitel + '" font-size="14" font-weight="500" letter-spacing="1.5" font-family="Roboto,sans-serif">PUFFER</text>';
+
+          /* Deckel */
+          html += '<rect x="70" y="8" width="60" height="16" rx="4" fill="#bbb"/>';
+          html += '<rect x="85" y="2" width="30" height="10" rx="3" fill="#ccc"/>';
+
+          /* Rohre links: WP VL rein (rot), WP RL raus (blau) */
+          html += '<line x1="0" y1="150" x2="14" y2="150" stroke="' + farbeVL + '" stroke-width="3" stroke-linecap="round"/>';
+          html += '<polygon points="12,144 20,150 12,156" fill="' + farbeVL + '"/>';
+          html += '<line x1="6" y1="245" x2="20" y2="245" stroke="' + farbeRL + '" stroke-width="3" stroke-linecap="round"/>';
+          html += '<polygon points="8,239 0,245 8,251" fill="' + farbeRL + '"/>';
+
+          /* Rohre rechts: HK VL raus (rot), HK RL rein (blau) */
+          html += '<line x1="180" y1="180" x2="194" y2="180" stroke="' + farbeVL + '" stroke-width="3" stroke-linecap="round"/>';
+          html += '<polygon points="192,174 200,180 192,186" fill="' + farbeVL + '"/>';
+          html += '<line x1="186" y1="245" x2="200" y2="245" stroke="' + farbeRL + '" stroke-width="3" stroke-linecap="round"/>';
+          html += '<polygon points="188,239 180,245 188,251" fill="' + farbeRL + '"/>';
+
+          /* Anschluss-Stutzen */
+          html += '<rect x="6" y="56" width="18" height="7" rx="3" fill="' + c1 + '" opacity="0.6"/>';
+          html += '<rect x="6" y="126" width="18" height="7" rx="3" fill="' + c2 + '" opacity="0.6"/>';
+          html += '<rect x="6" y="208" width="18" height="7" rx="3" fill="' + c3 + '" opacity="0.6"/>';
+          html += '<rect x="6" y="286" width="18" height="7" rx="3" fill="' + c4 + '" opacity="0.6"/>';
+          html += '<rect x="176" y="56" width="18" height="7" rx="3" fill="' + c1 + '" opacity="0.6"/>';
+          html += '<rect x="176" y="286" width="18" height="7" rx="3" fill="' + c4 + '" opacity="0.6"/>';
+
+          html += '</svg>';
+
+          /* Temperaturwerte im Tank */
+          html += '<div style="position:absolute;top:62px;left:50%;transform:translateX(-50%);text-align:center;">';
+          html += '<div style="font-size:12px;color:' + farbeLabel + ';text-transform:uppercase;">Oben</div>';
+          html += '<div style="font-size:22px;font-weight:300;color:' + farbeWert + ';">' + bwo.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          html += '<div style="position:absolute;top:116px;left:50%;transform:translateX(-50%);text-align:center;">';
+          html += '<div style="font-size:12px;color:' + farbeLabel + ';text-transform:uppercase;">Unten</div>';
+          html += '<div style="font-size:22px;font-weight:300;color:' + farbeWert + ';">' + bwu.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          html += '<div style="position:absolute;top:206px;left:50%;transform:translateX(-50%);text-align:center;">';
+          html += '<div style="font-size:12px;color:' + farbeLabel + ';text-transform:uppercase;">Oben</div>';
+          html += '<div style="font-size:22px;font-weight:300;color:' + farbeWert + ';">' + pfo.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          html += '<div style="position:absolute;top:262px;left:50%;transform:translateX(-50%);text-align:center;">';
+          html += '<div style="font-size:12px;color:' + farbeLabel + ';text-transform:uppercase;">Unten</div>';
+          html += '<div style="font-size:22px;font-weight:300;color:' + farbeWert + ';">' + pfu.toFixed(1) + ' °C</div>';
+          html += '</div>';
+
+          html += '</div>';
+
+          /* ── Rechte Seite: Heizkreis 1 ── */
+          html += '<div style="display:flex;flex-direction:column;align-items:center;gap:0px;padding-left:4px;min-width:90px;position:relative;">';
+          /* Außentemperatur oben rechts - absolut positioniert wie Status links */
+          html += '<div style="position:absolute;top:-80px;right:0;display:flex;flex-direction:column;align-items:flex-end;gap:1px;">';
+          html += '<div style="font-size:14px;font-weight:500;color:var(--primary-text-color);">Außentemperatur</div>';
+          html += '<div style="font-size:14px;font-weight:500;color:var(--primary-text-color);">' + aussenTemp.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          /* Icon + Titel */
+          html += '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">';
+          html += '<ha-icon icon="mdi:radiator" style="--mdi-icon-size:20px;color:' + farbeAussenLabel + ';width:20px;height:20px;"></ha-icon>';
+          html += '<span style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;font-weight:500;">Heizkreis 1</span>';
+          html += '</div>';
+          /* VL */
+          html += '<div style="text-align:center;margin-top:34px;">';
+          html += '<div style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;">Vorlauf</div>';
+          html += '<div style="font-size:18px;font-weight:400;color:' + farbeVL + ';">' + hkVL.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          /* RL */
+          html += '<div style="text-align:center;margin-top:30px;">';
+          html += '<div style="font-size:12px;color:' + farbeAussenLabel + ';text-transform:uppercase;letter-spacing:0.5px;">Rücklauf</div>';
+          html += '<div style="font-size:18px;font-weight:400;color:' + farbeRL + ';">' + hkRL.toFixed(1) + ' °C</div>';
+          html += '</div>';
+          html += '</div>';
+
+          html += '</div>';
+          return html;
+        ]]]
+card_mod:
+  style: |
+    ha-card > :first-child {
+      padding-top: 12px;
+    }
