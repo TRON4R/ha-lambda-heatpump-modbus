@@ -11,8 +11,8 @@
 
 ## Compatible Heat Pumps
 
-This package was developed and validated on the **Lambda EU20L**, but the
-Modbus register map is identical across the entire Lambda EU-L series: EU08L, EU13L, EU15L and EU20L.
+This package was developed and validated on the Lambda EU20L, but the
+Modbus register map is identical across the entire Lambda EU-L series: **EU08L, EU13L, EU15L and EU20L**.
 
 Only the physical heating capacity differs — the register block layout, scaling, data types and enumerations are shared between all models. Renaming the Modbus hub name (and optionally the `EU20L …` sensor name prefixes) is all that is needed to run the same package on a different EU-L model.
 
