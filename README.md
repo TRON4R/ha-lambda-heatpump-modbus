@@ -52,27 +52,27 @@ and was built with the following goals in mind:
 3. **Complete HA metadata on every sensor.** `device_class`, `state_class`,
    `unit_of_measurement`, `scale` and `precision` are set for every entity,
    so long-term statistics, Energy Dashboard integration and history graphs
-   work out of the box, without any manual configuration in the HA UI. This
-   package also assigns a `unique_id` to every entity — without `unique_id`
+   work out of the box, without any manual configuration in the HA UI.
+4. This package also assigns a `unique_id` to every entity — without `unique_id`
    Home Assistant does not allow entities to be customized from the UI
-   (renaming, changing units, icons, etc.), so unique IDs are essential for
+   (changes such as renaming, changing units or icons etc. are not permitted then), so unique IDs are essential for
    a complete YAML definition to provide a seamless user experience.
-4. **Units are rescaled at the Modbus layer**, not stacked on top via
+5. **Units are rescaled at the Modbus layer**, not stacked on top via
    templates. Accumulated counters are exposed directly in kWh (instead of
    seven-digit Wh values) and the inverter power in kW. Downstream systems
-   (evcc, Power Flow Card, Energy Dashboard) get sane values without wrapper
+   (evcc, Power Flow Card, Energy Dashboard) get sane values without needing additional wrapper
    templates.
-5. **Climate entities for RW registers.** Heating curve offset, domestic hot
+6. **Climate entities for RW registers.** Heating curve offset, domestic hot
    water thermostat and room thermostat are exposed as native HA climate
    tiles — not just read-only sensors.
-6. **Dashboard included.** SVG buffer-tank visualization and gauges ship as
+7. **Dashboard included.** SVG buffer-tank visualization and gauges ship as
    ready-to-use Lovelace YAML — other projects are backend-only.
 
 ## Requirements
 
-- Home Assistant (any current version with the built-in [Modbus integration](https://www.home-assistant.io/integrations/modbus/))
+- Home Assistant (any current version with the built-in [Modbus integration](https://www.home-assistant.io/integrations/modbus/) activated)
 - A Lambda EU-L series heat pump with firmware that exposes the Modbus TCP interface
-- Network connection between HA and the Lambda controller (Ethernet)
+- A network connection between HA and the Lambda controller (Ethernet)
 - Default Modbus TCP port: **502**
 
 > **Firmware note (V1.1.3):** Owners with firmware V1.1.3 have reported that
@@ -146,7 +146,7 @@ control panel (at user level 2 or higher). Column "Panel Label" lists the corres
 German panel term so they can be cross-checked.
 
 > ⚠️ Use at your own risk. No guarantee that the register assignments are
-> correct on every firmware version.
+> correct on every firmware version. Lambda intends to keep them, though. 
 
 | Register | Sensor | Unit | Panel Label |
 |---|---|---|---|
@@ -204,16 +204,16 @@ planned but not yet included because they depend on a longer chain of
 `utility_meter` helpers and integration helpers that are not part of this
 package. Contributions welcome.
 
-## Optional Fun Project: Recreation of the Lambda Service Panel
+## Additional Fun Project: Recreation of the Lambda Service Panel
 
-A potential next step: recreate the native Lambda Sigmatek service panel as a
+If you want, you can recreate the native Lambda Sigmatek service panel as a
 Lovelace view inside Home Assistant. Now that every relevant register is
-exposed via Modbus, all the values the physical control panel shows are
+exposed via Modbus, nearly all the values the physical control panel shows are
 available as HA entities, so a pixel-accurate recreation with
 `picture-elements` and `card-mod` becomes feasible.
 
 The screenshot below is the original Lambda Sigmatek HMI as it appears on
-the desktop client — the target for the recreation:
+the desktop client:
 
 <p align="center">
   <img src="images/dashboard_panel.png" alt="Original Lambda Sigmatek service panel (target for Lovelace recreation)" width="760"/>
