@@ -86,7 +86,7 @@ heat-load-pump (HLP) control percentage and HLP flow rate. A custom
 button-card renders the buffer tank as an SVG with live temperature readings.
 
 <p align="center">
-  <img src="images/dashboard_buffer_tank.png" alt="Dashboard card with gauges and buffer tank visualization" width="600"/>
+  <img src="images/dashboard_buffer_tank.png" alt="Dashboard card with gauges and buffer tank visualization" width="525"/>
 </p>
 
 **Usage:** Paste the contents of `dashboard_card.yaml` as a manual card (YAML)
