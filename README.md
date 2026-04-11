@@ -31,7 +31,7 @@ Based on the official [Lambda Modbus specification](https://www.lambda-wp.at/fil
 - **Separate optional helpers** (`helpers.yaml`) for compressor speed in rpm, IMP NMT MAX II circulation pump control percentage, and a collective fault binary sensor
 - **Ready-to-use Lovelace dashboard card** with 6 gauges, heat pump state badge and an SVG buffer-tank visualization
 
-## What's Different (Why use this integration?)
+## What's Different (why use this integration?)
 
 A few other Lambda heat pump projects already exist for Home Assistant
 (see [Related Projects](#related-projects) at the bottom). This package is
