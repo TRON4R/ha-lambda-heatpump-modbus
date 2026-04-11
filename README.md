@@ -37,10 +37,12 @@ Several other Lambda heat pump projects already exist for Home Assistant
 (see [Related Projects](#related-projects) at the bottom). This package was
 built from scratch with the following goals in mind:
 
-1. **Pure YAML, no custom component.** Uses the built-in Home Assistant
-   Modbus integration — no HACS dependency, no breakage on updates, works on
-   every current HA version.
-2. **Undocumented registers 1025–1032 covered.**
+1. **Pure YAML, no custom component, no additional Python code.** Uses the
+   built-in Home Assistant Modbus integration — no HACS dependency, no
+   breakage on updates, works on every current HA version.
+2. **Undocumented registers 1025–1032 covered:** hot gas, subcooling,
+   suction gas, condensation, evaporation, expansion valve opening angle,
+   VdA max rating and EqM rating.
 3. **Complete HA metadata on every sensor.** `device_class`, `state_class`,
    `unit_of_measurement`, `scale` and `precision` are set for every entity,
    so long-term statistics, Energy Dashboard integration and history graphs
@@ -48,7 +50,7 @@ built from scratch with the following goals in mind:
    package also assigns a `unique_id` to every entity — without `unique_id`
    Home Assistant does not allow entities to be customized from the UI
    (renaming, changing units, icons, etc.), so unique IDs are essential for
-   a complete YAML definition.
+   a complete YAML definition to provide a seamless user experience.
 4. **Units are rescaled at the Modbus layer**, not stacked on top via
    templates. Accumulated counters are exposed directly in kWh (instead of
    seven-digit Wh values) and the inverter power in kW. Downstream systems
