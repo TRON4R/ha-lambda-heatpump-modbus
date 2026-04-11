@@ -53,19 +53,34 @@ and was built with the following goals in mind:
    `unit_of_measurement`, `scale` and `precision` are set for every entity,
    so long-term statistics, Energy Dashboard integration and history graphs
    work out of the box, without any manual configuration in the HA UI.
-4. This package also assigns a `unique_id` to every entity — without `unique_id`
-   Home Assistant does not allow entities to be customized from the UI
-   (changes such as renaming, changing units or icons etc. are not permitted then), so unique IDs are essential for
-   a complete YAML definition to provide a seamless user experience.
-5. **Units are rescaled at the Modbus layer**, not stacked on top via
+4. **Unique IDs on every entity.** This package also assigns a `unique_id` to
+   every entity — without `unique_id` Home Assistant does not allow entities
+   to be customized from the UI (changes such as renaming, changing units or
+   icons etc. are not permitted then), so unique IDs are essential for a
+   complete YAML definition to provide a seamless user experience.
+5. **State mapping via dict, not list index.** All state-register decoders use
+   a `key → label` dict (with a parallel `key → mdi:icon` dict) instead of
+   indexing into an inline list. List-based decoders silently shift if a state
+   is added, removed or omitted by mistake — every label after the gap then
+   shows the wrong value. The dict approach binds each numeric state to its
+   label by key, falls back cleanly to `Unknown` for unmapped values, lets
+   every state carry its own MDI icon, is less redundant and easier to
+   maintain (one line per state, no positional bookkeeping), and is trivial
+   to translate by editing the dict values directly.
+6. **Uniform key order in every sensor block.** All sensor definitions list
+   their keys in the same order (`name`, `unique_id`, `address`, `data_type`,
+   `scale`, `precision`, `device_class`, `state_class`, `unit_of_measurement`),
+   so blocks are easy to diff against each other and the YAML stays reviewable
+   when copy-pasted to add a second heating circuit or buffer tank.
+7. **Units are rescaled at the Modbus layer**, not stacked on top via
    templates. Accumulated counters are exposed directly in kWh (instead of
    seven-digit Wh values) and the inverter power in kW. Downstream systems
    (evcc, Power Flow Card, Energy Dashboard) get sane values without needing additional wrapper
    templates.
-6. **Climate entities for RW registers.** Heating curve offset, domestic hot
+8. **Climate entities for RW registers.** Heating curve offset, domestic hot
    water thermostat and room thermostat are exposed as native HA climate
    tiles — not just read-only sensors.
-7. **Dashboard included.** SVG buffer-tank visualization and gauges ship as
+9. **Dashboard included.** SVG buffer-tank visualization and gauges ship as
    ready-to-use Lovelace YAML — other projects are backend-only.
 
 ## Requirements
@@ -213,7 +228,9 @@ available as HA entities, so a pixel-accurate recreation using the
 `picture-elements` dashboard card becomes feasible.
 
 The screenshot below is the original Lambda Sigmatek HMI as it appears on
-the desktop client — the recreation aims to mirror it as closely as possible:
+the desktop client — the recreation aims to mirror it as closely as possible,
+with domestic hot water, buffer and heating circuit temperatures added to the
+same view so that all relevant data is available in one place:
 
 <p align="center">
   <img src="images/dashboard_panel.png" alt="Original Lambda Sigmatek service panel (target for Lovelace recreation)" width="760"/>
