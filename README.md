@@ -209,8 +209,8 @@ package. Contributions welcome.
 If you want, you can recreate the native Lambda Sigmatek service panel as a
 Lovelace view inside Home Assistant. Now that every relevant register is
 exposed via Modbus, nearly all the values the physical control panel shows are
-available as HA entities, so a pixel-accurate recreation with `picture-elements`
-becomes feasible.
+available as HA entities, so a pixel-accurate recreation using the
+`picture-elements` dashboard card becomes feasible.
 
 The screenshot below is the original Lambda Sigmatek HMI as it appears on
 the desktop client — the recreation aims to mirror it as closely as possible:
@@ -233,6 +233,13 @@ Two files in this repo make this a drop-in addition:
 2. Create a new dashboard view of type **Sidebar** (or any view that gives the
    card enough horizontal space — the panel image has a fixed aspect ratio)
 3. Add a manual card and paste the contents of `service_panel_card.yaml`
+
+> **Fine-tuning:** browser zoom level, screen resolution and font rendering
+> all affect where each label lands on the background image. After installation
+> you can edit the card directly in the dashboard UI and adjust the `left`,
+> `top` and `font-size` values of every element (e.g., `left: 50%`,
+> `top: 29.2%`, `font-size: 2.2vmin`) until everything lines up cleanly in your
+> environment.
 
 > **Optional:** the YAML reserves a slot for an external flow-rate entity
 > (e.g., from a circulation pump such as the IMP NMT MAX II, or the HLP
