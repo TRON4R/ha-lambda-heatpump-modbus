@@ -158,7 +158,7 @@ German panel term so they can be cross-checked.
 | 1032 | Expansion Valve Opening Angle | % | ExV (Öffnungswinkel) |
 
 <p align="center">
-  <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="400"/>
+  <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="500"/>
 </p>
 
 ## Climate Entities
