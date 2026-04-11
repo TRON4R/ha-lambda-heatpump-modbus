@@ -219,7 +219,7 @@ planned but not yet included because they depend on a longer chain of
 `utility_meter` helpers and integration helpers that are not part of this
 package. Contributions welcome.
 
-## Additional Fun Project: Recreation of the Lambda Service Panel
+## Additional Fun Project: Recreation of the Lambda Service Panel (optional)
 
 If you want, you can recreate the native Lambda Sigmatek service panel as a
 Lovelace view inside Home Assistant. Now that every relevant register is
