@@ -228,10 +228,10 @@ the desktop client — the target for the recreation:
 
 Other Lambda heat pump projects for Home Assistant:
 
-- [`RalfWinter/lambda-heatpump-modbus-tcp-HA`](https://github.com/RalfWinter/lambda-heatpump-modbus-tcp-HA) — early lean YAML package; one of the original community starting points many later projects were seeded from
+- [`RalfWinter/lambda-heatpump-modbus-tcp-HA`](https://github.com/RalfWinter/lambda-heatpump-modbus-tcp-HA) — early basic YAML package
 - [`GuidoJeuken-6512/lambda_heat_pumps`](https://github.com/GuidoJeuken-6512/lambda_heat_pumps) — HACS custom component
 - [`floriansProjects/lambda-heatpump-homeassistant`](https://github.com/floriansProjects/lambda-heatpump-homeassistant) — YAML package paired with Grafana dashboards and a Shelly Pro 3EM for cross-checked energy metering
-- [`route662/Lambda-Heatpump`](https://github.com/route662/Lambda-Heatpump) — alternative custom Python component
+- [`route662/Lambda-Heatpump`](https://github.com/route662/Lambda-Heatpump) — alternative HACS custom Python component
 
 ## License
 
