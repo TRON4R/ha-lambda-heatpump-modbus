@@ -212,6 +212,13 @@ exposed via Modbus, nearly all the values the physical control panel shows are
 available as HA entities, so a pixel-accurate recreation with `picture-elements`
 becomes feasible.
 
+The screenshot below is the original Lambda Sigmatek HMI as it appears on
+the desktop client — the recreation aims to mirror it as closely as possible:
+
+<p align="center">
+  <img src="images/dashboard_panel.png" alt="Original Lambda Sigmatek service panel (target for Lovelace recreation)" width="760"/>
+</p>
+
 Two files in this repo make this a drop-in addition:
 
 - **`service_panel_card.yaml`** — a `picture-elements` Lovelace card with all
