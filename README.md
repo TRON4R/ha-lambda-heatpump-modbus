@@ -34,8 +34,10 @@ Based on the official [Lambda Modbus specification](https://www.lambda-wp.at/fil
 ## What's Different
 
 Several other Lambda heat pump projects already exist for Home Assistant
-(see [Related Projects](#related-projects) at the bottom). This package was
-built from scratch with the following goals in mind:
+(see [Related Projects](#related-projects) at the bottom). This package is
+based on the initial work of [@RalfWinter](https://github.com/RalfWinter/lambda-heatpump-modbus-tcp-HA),
+includes the ideas and suggestions of [@thecem](https://github.com/thecem)
+and was built with the following goals in mind:
 
 1. **Pure YAML, no custom component.** Uses the built-in Home Assistant
    Modbus integration — no HACS dependency, no additional Python code,
@@ -220,21 +222,16 @@ the desktop client — the target for the recreation:
 ## Documentation
 
 - [Lambda Modbus specification (PDF)](https://www.lambda-wp.at/fileadmin/userdaten/docs/downloads/regler/Modbus-Beschreibung-und-Protokoll.pdf) — official Lambda Wärmepumpen Modbus description and protocol, dated 2025-02-13
-- Reverse-engineered register mapping for the undocumented registers 1025-1032 is documented inline in `lambda_heatpump.yaml`
+- Reverse-engineered register mapping for the undocumented registers 1025-1032 is documented inline in `lambda_heatpump.yaml` — thanks to [@thecem](https://github.com/thecem)
 
 ## Related Projects
 
 Other Lambda heat pump projects for Home Assistant:
 
+- [`RalfWinter/lambda-heatpump-modbus-tcp-HA`](https://github.com/RalfWinter/lambda-heatpump-modbus-tcp-HA) — early lean YAML package; one of the original community starting points many later projects were seeded from
 - [`GuidoJeuken-6512/lambda_heat_pumps`](https://github.com/GuidoJeuken-6512/lambda_heat_pumps) — HACS custom component
-- [`RalfWinter/lambda-heatpump-modbus-tcp-HA`](https://github.com/RalfWinter/lambda-heatpump-modbus-tcp-HA) — earlier YAML package
-- [`floriansProjects/lambda-heatpump-homeassistant`](https://github.com/floriansProjects/lambda-heatpump-homeassistant)
-- [`route662/Lambda-Heatpump`](https://github.com/route662/Lambda-Heatpump)
-
-This project is an independent, from-scratch YAML package with the explicit
-goal of **correct HA metadata on every entity** (device/state class, unit,
-scale, precision) and **full coverage including the undocumented 1025-1032
-range**.
+- [`floriansProjects/lambda-heatpump-homeassistant`](https://github.com/floriansProjects/lambda-heatpump-homeassistant) — YAML package paired with Grafana dashboards and a Shelly Pro 3EM for cross-checked energy metering
+- [`route662/Lambda-Heatpump`](https://github.com/route662/Lambda-Heatpump) — alternative custom Python component
 
 ## License
 
