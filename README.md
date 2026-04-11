@@ -127,14 +127,14 @@ German panel term so they can be cross-checked.
 
 | Register | Sensor | Unit | Panel Label |
 |---|---|---|---|
-| 1025 | VdA Max Rating | % | Verdichteranlage Max. Rating (VdA) |
-| 1026 | Hot Gas Temperature | °C | Heißgas (HG) |
-| 1027 | Subcooling Temperature | °C | Unterkühlung (SC) |
-| 1028 | Suction Gas Temperature | °C | Sauggas (SG) |
-| 1029 | Condensation Temperature | °C | Kondensation (KD) |
-| 1030 | Evaporation Temperature | °C | Verdampfung (VD) |
-| 1031 | EqM Rating | % | Energiequellen-Modulation (EqM) |
-| 1032 | Expansion Valve Opening Angle | % | Öffnungswinkel (ExV) |
+| 1025 | VdA Max Rating | % | VdA (Verdichteranlage Max. Rating) |
+| 1026 | Hot Gas Temperature | °C | HG (Heißgas) |
+| 1027 | Subcooling Temperature | °C | SC (Unterkühlung) |
+| 1028 | Suction Gas Temperature | °C | SG (Sauggas) |
+| 1029 | Condensation Temperature | °C | KD (Kondensation) |
+| 1030 | Evaporation Temperature | °C | VD (Verdampfung) |
+| 1031 | EqM Rating | % | EqM (Energiequellen-Modulation) |
+| 1032 | Expansion Valve Opening Angle | % | ExV (Öffnungswinkel) |
 
 <p align="center">
   <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="400"/>
