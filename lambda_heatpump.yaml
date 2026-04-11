@@ -1,14 +1,19 @@
-# Lambda Heat Pump Modbus/TCP Integration
-# based on Lambda Modbus specification dated 13.02.2025
-# Change name according to your requirements, host to the IP of your heatpump
-# 
-# the contents of this file needs to be appended to the configuration.yaml in your HA-installation
-# or saved in a folder named 'packages' for example as lambda_wp.yaml and then the following two lines 
+# ==============================================================================
+# Lambda EU-L Series — Home Assistant Modbus TCP Integration
+# ==============================================================================
+# Built against the Lambda Modbus specification, version 13.02.2025
 #
-# homeassistant:
-#   packages: !include_dir_named packages
+# Compatible heat pumps: EU08L, EU13L, EU15L, EU20L
 #
-# need to be added somewhere in the first lines of the configuration.yaml 
+# YAML created in 2025/2026 by TRON4R
+#
+# INSTALLATION:
+# 1. Copy this file to /config/packages/lambda_heatpump.yaml
+# 2. Add to configuration.yaml:
+#    homeassistant:
+#      packages: !include_dir_named packages
+# 3. Adjust the Lambda IP address in the YAML
+# 4. Restart Home Assistant
 #
 # order of definitions:
 #
@@ -134,7 +139,7 @@ modbus:
         # scan_interval: 10
 
     ### EU20L Heat Pump 1 → HP1
-    #   for additonal heatpumps, this section needs to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
+    #   for additional heatpumps, this section needs to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
     
       - name: "EU20L HP1 Heat Pump Error State 1000" # 0 = NONE, 1 = MESSAGE, 2 = WARNING, 3 = ALARM, 4 = FAULT
         unique_id: eu20l_1000
@@ -346,7 +351,7 @@ modbus:
         # scan_interval: 10
 
     #
-    #   for additonal heatpumps, all previous definitions for HP1 need to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
+    #   for additional heatpumps, all previous definitions for HP1 need to be duplicated, HP1 changed to HP2 and the second digit of the register address increased by 1 e.g. 1000 → 1100 and 1001 → 1101 etc.
     #
 
     ### Additional Registers detected by a Modbus scan ###
@@ -746,7 +751,7 @@ modbus:
         # scan_interval: 10
 
     ### EU20L Heating Circuit 1 → HC1 (for easier typing access in HA if HC2, HC3 etc. exist)
-    #   e.g. underfloor or radiator heating - for additonal heating circuits, this section needs to be duplicated, HC1 changed to HC2 and the second digit of the register address increased by 1
+    #   e.g. underfloor or radiator heating - for additional heating circuits, this section needs to be duplicated, HC1 changed to HC2 and the second digit of the register address increased by 1
       
       - name: "EU20L HC1 Error Number 5000" # RO - 0 = No Error
         unique_id: eu20l_5000
