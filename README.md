@@ -40,6 +40,10 @@ built from scratch with the following goals in mind:
 1. **Pure YAML, no custom component.** Uses the built-in Home Assistant
    Modbus integration — no HACS dependency, no additional Python code,
    reduced risk of breakage on updates, works on every current HA version.
+   Pure YAML also makes customization straightforward: adding a second
+   heating circuit, an additional buffer tank or a second boiler is a
+   copy-paste of the existing register block with adjusted register
+   addresses.
 2. **Undocumented registers 1025–1032 covered:** hot gas, subcooling,
    suction gas, condensation, evaporation, expansion valve opening angle,
    VdA max rating and EqM rating.
