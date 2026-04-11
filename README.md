@@ -31,19 +31,34 @@ Based on the official [Lambda Modbus specification](https://www.lambda-wp.at/fil
 - **Separate optional helpers** (`helpers.yaml`) for compressor speed in rpm, IMP NMT MAX II circulation pump control percentage, and a collective fault binary sensor
 - **Ready-to-use Lovelace dashboard card** with 6 gauges, heat pump state badge and an SVG buffer-tank visualization
 
-## Entity Quality
+## What's Different
 
-All sensors are defined with correct and complete HA metadata: `unique_id`,
-`device_class`, `state_class`, `unit_of_measurement`, `scale` and `precision`
-are carefully set for every entity. Long-term statistics, Energy Dashboard
-integration and history graphs work out of the box, without any manual
-configuration in the HA UI.
+Several other Lambda heat pump projects already exist for Home Assistant
+(see [Related Projects](#related-projects) at the bottom). This package was
+built from scratch with the following goals in mind:
 
-Accumulated energy counters (registers 1020 and 1022) are converted from Wh to
-kWh at the scale level so the Energy Dashboard does not have to deal with
-seven-digit Wh readings. Power consumption from the frequency inverter
-(register 1012) is also rescaled from W to kW to match the unit the Lambda
-control panel and every downstream system (evcc, Power Flow Card) expect.
+1. **Pure YAML, no custom component.** Uses the built-in Home Assistant
+   Modbus integration — no HACS dependency, no breakage on updates, works on
+   every current HA version.
+2. **Undocumented registers 1025–1032 covered.**
+3. **Complete HA metadata on every sensor.** `device_class`, `state_class`,
+   `unit_of_measurement`, `scale` and `precision` are set for every entity,
+   so long-term statistics, Energy Dashboard integration and history graphs
+   work out of the box, without any manual configuration in the HA UI. This
+   package also assigns a `unique_id` to every entity — without `unique_id`
+   Home Assistant does not allow entities to be customized from the UI
+   (renaming, changing units, icons, etc.), so unique IDs are essential for
+   a complete YAML definition.
+4. **Units are rescaled at the Modbus layer**, not stacked on top via
+   templates. Accumulated counters are exposed directly in kWh (instead of
+   seven-digit Wh values) and the inverter power in kW. Downstream systems
+   (evcc, Power Flow Card, Energy Dashboard) get sane values without wrapper
+   templates.
+5. **Climate entities for RW registers.** Heating curve offset, domestic hot
+   water thermostat and room thermostat are exposed as native HA climate
+   tiles — not just read-only sensors.
+6. **Dashboard included.** SVG buffer-tank visualization and gauges ship as
+   ready-to-use Lovelace YAML — other projects are backend-only.
 
 ## Requirements
 
