@@ -80,19 +80,21 @@ control panel and every downstream system (evcc, Power Flow Card) expect.
 
 ## Dashboard Card (optional)
 
-<p align="center">
-  <img src="images/dashboard_panel.png" alt="Lambda Heat Pump Dashboard" width="400"/>
-</p>
-
 The file `dashboard_card.yaml` contains a ready-to-use Lovelace card with
 gauges for heating power, electrical power consumption, COP, compressor speed,
 heat-load-pump (HLP) control percentage and HLP flow rate. A custom
 button-card renders the buffer tank as an SVG with live temperature readings.
 
 <p align="center">
-  <img src="images/dashboard_buffer_tank.png" alt="Buffer tank SVG" width="220"/>
-  &nbsp;
-  <img src="images/dashboard_all_entities.png" alt="All entities view" width="220"/>
+  <img src="images/dashboard_buffer_tank.png" alt="Dashboard card with gauges and buffer tank visualization" width="400"/>
+</p>
+
+A separate overview view groups every Modbus entity into columns by module
+(Heizsystem, Heizkreis, Wärmepumpe, Brauchwasser, Puffer, E-Manager,
+Undocumented Registers) plus long-term trends for COP/SCOP and PV surplus:
+
+<p align="center">
+  <img src="images/dashboard_all_entities.png" alt="Full entities overview" width="760"/>
 </p>
 
 **Usage:** Paste the contents of `dashboard_card.yaml` as a manual card (YAML)
@@ -179,6 +181,21 @@ Template sensors for **JAZ / MAZ / TAZ** (yearly / monthly / daily COP) are
 planned but not yet included because they depend on a longer chain of
 `utility_meter` helpers and integration helpers that are not part of this
 package. Contributions welcome.
+
+## Optional Fun Project: Recreation of the Lambda Service Panel
+
+A potential next step: recreate the native Lambda Sigmatek service panel as a
+Lovelace view inside Home Assistant. Now that every relevant register is
+exposed via Modbus, all the values the physical control panel shows are
+available as HA entities, so a pixel-accurate recreation with
+`picture-elements` and `card-mod` becomes feasible.
+
+The screenshot below is the original Lambda Sigmatek HMI as it appears on
+the desktop client — the target for the recreation:
+
+<p align="center">
+  <img src="images/dashboard_panel.png" alt="Original Lambda Sigmatek service panel (target for Lovelace recreation)" width="760"/>
+</p>
 
 ## Documentation
 
