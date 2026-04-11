@@ -86,15 +86,7 @@ heat-load-pump (HLP) control percentage and HLP flow rate. A custom
 button-card renders the buffer tank as an SVG with live temperature readings.
 
 <p align="center">
-  <img src="images/dashboard_buffer_tank.png" alt="Dashboard card with gauges and buffer tank visualization" width="400"/>
-</p>
-
-A separate overview view groups every Modbus entity into columns by module
-(Heizsystem, Heizkreis, Wärmepumpe, Brauchwasser, Puffer, E-Manager,
-Undocumented Registers) plus long-term trends for COP/SCOP and PV surplus:
-
-<p align="center">
-  <img src="images/dashboard_all_entities.png" alt="Full entities overview" width="760"/>
+  <img src="images/dashboard_buffer_tank.png" alt="Dashboard card with gauges and buffer tank visualization" width="600"/>
 </p>
 
 **Usage:** Paste the contents of `dashboard_card.yaml` as a manual card (YAML)
@@ -103,6 +95,13 @@ in the dashboard editor.
 > **Helper dependency:** The gauges for compressor speed (rpm) and HLP control
 > percentage reference template sensors that live in `helpers.yaml`. Install
 > `helpers.yaml` together with the dashboard card or remove those two gauges.
+
+The following dashboard lists all entities plus long-term trends for COP/SCOP
+and PV surplus in one Dashboard view:
+
+<p align="center">
+  <img src="images/dashboard_all_entities.png" alt="Full entities overview" width="760"/>
+</p>
 
 ### Required HACS Cards
 
@@ -119,8 +118,8 @@ YAML itself works independently.
 
 Eight additional registers exist in the 1025-1032 range that are **not**
 documented in the official Lambda Modbus specification. They were identified
-by a full Modbus scan and matched against values visible on the Lambda control
-panel (at user level 2 or 3). Column "Panel Label" lists the corresponding
+by a full Modbus scan and match many of the values visible on the Lambda
+control panel (at user level 2 or higher). Column "Panel Label" lists the corresponding
 German panel term so they can be cross-checked.
 
 > ⚠️ Use at your own risk. No guarantee that the register assignments are
@@ -128,14 +127,14 @@ German panel term so they can be cross-checked.
 
 | Register | Sensor | Unit | Panel Label |
 |---|---|---|---|
-| 1025 | VdA Max Rating | % | Verdichteranlage Max. Rating |
-| 1026 | Hot Gas Temperature | °C | Heißgas |
-| 1027 | Subcooling Temperature | °C | Unterkühlung |
-| 1028 | Suction Gas Temperature | °C | Sauggas |
-| 1029 | Condensation Temperature | °C | Kondensation |
-| 1030 | Evaporation Temperature | °C | Verdampfung |
-| 1031 | EqM Rating | % | Energiequellen-Modulation |
-| 1032 | Expansion Valve Opening Angle | % | Öffnungswinkel |
+| 1025 | VdA Max Rating | % | Verdichteranlage Max. Rating (VdA) |
+| 1026 | Hot Gas Temperature | °C | Heißgas (HG) |
+| 1027 | Subcooling Temperature | °C | Unterkühlung (SC) |
+| 1028 | Suction Gas Temperature | °C | Sauggas (SG) |
+| 1029 | Condensation Temperature | °C | Kondensation (KD) |
+| 1030 | Evaporation Temperature | °C | Verdampfung (VD) |
+| 1031 | EqM Rating | % | Energiequellen-Modulation (EqM) |
+| 1032 | Expansion Valve Opening Angle | % | Öffnungswinkel (ExV) |
 
 <p align="center">
   <img src="images/dashboard_undocumented_registers.png" alt="Undocumented registers tile" width="400"/>
