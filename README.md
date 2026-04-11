@@ -23,7 +23,7 @@ Based on the official [Lambda Modbus specification](https://www.lambda-wp.at/fil
 
 - **Full register coverage of 6 Lambda modules** — Ambient, E-Manager, Heat Pump 1, Boiler 1, Buffer 1, Heating Circuit 1
 - **61 Modbus sensors** with correct `device_class`, `state_class`, `unit_of_measurement`, `scale` and `precision`
-- **8 undocumented register sensors** (hot gas, subcooling, suction gas, condensation, evaporation, expansion valve opening angle, VdA max rating, EqM rating) — identified by Modbus scan and matched against the Lambda control panel
+- **8 additional undocumented register sensors** (hot gas, subcooling, suction gas, condensation, evaporation, expansion valve opening angle, VdA max rating, EqM rating) — identified by Modbus scan and matched against the Lambda control panel
 - **9 state-mapping template sensors** rendering the numeric state registers as plain German panel text plus matching MDI icons
 - **4 calculated template sensors**: SCOP, flow/return ΔT, calculated heating power (`flow × ΔT × 1.163`), and the deviation between reported and calculated heating power
 - **3 climate entities** exposing the heating curve offset, domestic hot water thermostat and room thermostat as regular HA climate tiles
