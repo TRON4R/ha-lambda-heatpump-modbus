@@ -222,7 +222,7 @@ the desktop client — the target for the recreation:
 ## Documentation
 
 - [Lambda Modbus specification (PDF)](https://www.lambda-wp.at/fileadmin/userdaten/docs/downloads/regler/Modbus-Beschreibung-und-Protokoll.pdf) — official Lambda Wärmepumpen Modbus description and protocol, dated 2025-02-13
-- Reverse-engineered register mapping for the undocumented registers 1025-1032 is documented inline in `lambda_heatpump.yaml` — thanks to [@thecem](https://github.com/thecem)
+- Reverse-engineered register mappings for the undocumented registers 1025-1032 (thanks to [@thecem](https://github.com/thecem)) documented inline in `lambda_heatpump.yaml`
 
 ## Related Projects
 
