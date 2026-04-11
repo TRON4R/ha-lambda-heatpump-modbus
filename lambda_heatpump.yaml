@@ -60,12 +60,12 @@ modbus:
         unique_id: eu20l_0001
         address: 0001
         data_type: uint16
-        # device_class: enum # was recommendedb by Gemini to have HA automatically produce the right graphs. But is technically not correct
+        # device_class: enum # Technically not correct according to Home Assistant documentation
         # scan_interval: 10
         
       - name: "EU20L Ambient Temperature Actual 0002" #RW Actual ambient temperature (min = -50.0°C; max = 80.0°C)
         unique_id: eu20l_0002
-        address: 0002
+        address: 0002 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -113,7 +113,7 @@ modbus:
         
       - name: "EU20L EMgr Power Actual 0102" # RW Actual input power [UINT16 (min = 0W; max = 65535W)] or actual excess power [INT16 (min = -32768W; max = 32767W)] (depends on settings in Module)
         unique_id: eu20l_0102
-        address: 102 # has to be written without the leading 0. 
+        address: 102 # has to be written without the leading 0. RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16 # uint16 - depending on settings in Lambda control unit (Module) - use int16 if your HEMS sends surplus as negative values and uint16 if it sends it as positive values
         device_class: power
         state_class: measurement # recommended so that HA is creating a long-term statistic for the input values as well to compare with 0103 and 0104
@@ -235,7 +235,7 @@ modbus:
         data_type: uint16
         scale: 0.01
         precision: 2
-        # device_class: power_factor # not correct class according to Gemini 3 Pro and ChatGPT 5.1 Pro
+        # device_class: power_factor # Not correct class according to Home Assistant documentation
         state_class: measurement
         unit_of_measurement: "%"
         # scan_interval: 10
@@ -632,7 +632,7 @@ modbus:
         
       - name: "EU20L Boil1 Temperature Max 2050" # RW - Setting for maximum boiler temperature (min = 25.0°C; max = 65.0°C)
         unique_id: eu20l_2050
-        address: 2050 #(expects every 5 min a value) [according to thecem - gemini 3 says the documentation mentiones 
+        address: 2050 # (expects every 5 min a value) - actually not true. See page 5 paragraph 3.3 of the Modbus documentation - the 5 min timeout applies only to register 00-49!
         data_type: int16
         scale: 0.1
         precision: 1
@@ -680,7 +680,7 @@ modbus:
         # You might want to simply deactive them by adding comment delimeters
       - name: "EU20L Buff1 Modbus Buffer Temperature High 3004" # RW - Actual temperature of buffer set via modbus (min = 0°C; max = 90°C)
         unique_id: eu20l_3004
-        address: 3004
+        address: 3004 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -691,13 +691,13 @@ modbus:
 
       - name: "EU20L Buff1 Request Type 3005" # RW - -1 = INVALID REQUEST (can be used to deactivate modbus request immediately), 0 = NO, 1 = CIRCULATION ((is equal to NO REQUEST for buffer module), 2 = CENTRAL HEATING, 3 = CENTRAL COOLING
         unique_id: eu20l_3005
-        address: 3005
+        address: 3005 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         # scan_interval: 10
 
       - name: "EU20L Buff1 Request Flow Line Temperature Setpoint 3006" # RW - Requested flow line temperature. (min = 0.0°C, max = 65.0°C) -> Valid value is reuqired!
         unique_id: eu20l_3006
-        address: 3006
+        address: 3006 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -708,7 +708,7 @@ modbus:
 
       - name: "EU20L Buff1 Request Return Line Temperature Setpoint 3007" # RW - Requested return line temperature. (min = 0.0°C, max = 60.0°C) -> Valid value is reuqired!
         unique_id: eu20l_3007
-        address: 3007
+        address: 3007 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -719,7 +719,7 @@ modbus:
 
       - name: "EU20L Buff1 Request Heat Sink Temperature Difference Setpoint 3008" # RW - Requested temperature difference between flow line and return line. (min = 0.0K, max = 35.0K) -> Valid value is required!
         unique_id: eu20l_3008
-        address: 3008
+        address: 3008 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -789,7 +789,7 @@ modbus:
         
       - name: "EU20L HC1 Room Device Temperature 5004" # RW - Actual temperature room device sensor (min = -29.9°C; max = 99.9°C) [can be used to regulate heat pump with any readable room temperature device]
         unique_id: eu20l_5004
-        address: 5004
+        address: 5004 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -800,7 +800,7 @@ modbus:
         
       - name: "EU20L HC1 Flow Line Temperature Setpoint 5005" # RW - Setpoint temperature flow line (min = 15.0°C; max = 65.0°C) [only applicable in MANUAL operating mode - see register 5006, but 1 is read-only over Modbus]
         unique_id: eu20l_5005
-        address: 5005
+        address: 5005 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         scale: 0.1
         precision: 1
@@ -811,7 +811,7 @@ modbus:
         
       - name: "EU20L HC1 Operating Mode 5006" # RW - 0 = OFF(RW),1 = MANUAL(R),2 = AUTOMATIK(RW),3 = AUTO-HEATING(RW),4 = AUTO-COOLING(RW),5 = FROST(RW),6 = SUMMER(RW),7 = FLOOR-DRY(R) [setting to 1 or 7 requires using Lambda control panel]
         unique_id: eu20l_5006
-        address: 5006
+        address: 5006 # RW data-source register: requires refresh every <5 min when written (Modbus doc p.5 §3.3).
         data_type: int16
         # scan_interval: 10
 
@@ -830,7 +830,7 @@ modbus:
         
       - name: "EU20L HC1 Set Flow Line Temperature Offset 5050" # RW - Setting for flow line temperature setpoint offset (min = -10.0K; max = 10.0K) ["Heizkurve Solltemp Offset"]
         unique_id: eu20l_5050
-        address: 5050 #(expects every 5 min a value) - actually not true. see page 5 paragraph 3.3 of the Modbus documentation - the 5 min timout applies only to register 00-49!
+        address: 5050 # (expects every 5 min a value) - actually not true. See page 5 paragraph 3.3 of the Modbus documentation - the 5 min timeout applies only to register 00-49!
         data_type: int16
         scale: 0.1
         precision: 1
