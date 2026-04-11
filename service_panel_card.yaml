@@ -1,0 +1,267 @@
+# ==============================================================================
+# Lambda EU-L Series — Service Panel Recreation (Lovelace picture-elements card)
+# ==============================================================================
+# A pixel-overlay recreation of the original Lambda Sigmatek HMI service panel
+# as a Home Assistant Lovelace card. State labels are positioned on top of a
+# cleaned screenshot of the original panel.
+#
+# REQUIREMENTS:
+# - lambda_heatpump.yaml installed (provides all eu20l_* sensor entities)
+# - helpers.yaml installed (provides the two l_warmepumpe_* template helpers)
+# - The background image lambda_panel_background.png copied to /config/www/
+#
+# INSTALLATION:
+# 1. Copy images/lambda_panel_background.png from this repo to /config/www/
+#    (so it is served at /local/lambda_panel_background.png).
+# 2. Create a new dashboard view of type "Sidebar" (or any view that gives the
+#    card enough horizontal space — the panel image has a fixed aspect ratio).
+# 3. Add a manual card and paste the contents of this file as YAML.
+#
+# Optional customization: a flow-rate label is reserved for an external pump
+# entity (see the commented-out nmt_pumpe_durchfluss element near the end).
+# ==============================================================================
+
+type: picture-elements
+image: /local/lambda_panel_background.png
+elements:
+  - type: state-label
+    style:
+      left: 41.5%
+      top: 10.2%
+      color: white
+      font-size: 2.3vmin
+    entity: sensor.eu20l_ambient_temperature_calculated_0004
+    title: Außentemperatur Steuerung
+  - type: state-label
+    style:
+      right: 43.5%
+      top: 10.1%
+      color: black
+      font-size: 2.4vmin
+    entity: sensor.eu20l_ambient_temperature_actual_0002
+    title: Außentemperatur
+  - type: state-label
+    style:
+      left: 50%
+      top: 29.2%
+      color: black
+      font-size: 2.2vmin
+    entity: sensor.eu20l_hp1_compressor_rating_1010
+    title: Wärmepumpe Verdichter %
+  - type: state-label
+    style:
+      left: 50%
+      top: 32.8%
+      color: black
+      font-size: 2.2vmin
+    entity: sensor.l_warmepumpe_verdichter_drehzahl
+    title: Wärmepumpe Verdichter Drehzahl
+  - type: state-label
+    style:
+      left: 83.5%
+      top: 28.5%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_heat_pump_operating_state_1003_map
+    title: WP Betriebsart
+  - type: state-label
+    style:
+      left: 83.5%
+      top: 32.5%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_heat_pump_state_1002_map
+    title: WP Status
+  - type: state-label
+    style:
+      left: 40%
+      top: 37.5%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_hot_gas_temperature_1026
+    title: HG
+  - type: state-label
+    style:
+      left: 40%
+      top: 41.4%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_condensation_temperature_1029
+    title: KD
+  - type: state-label
+    style:
+      right: 27.7%
+      top: 37.5%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_suction_gas_temperature_1028
+    title: SG
+  - type: state-label
+    style:
+      right: 27.7%
+      top: 41.4%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_evaporation_temperature_1030
+    title: VD
+  - type: state-label
+    style:
+      left: 20.7%
+      top: 56.8%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_flow_line_temperature_1004
+    title: Vorlauftemp
+  - type: state-label
+    style:
+      left: 20.7%
+      top: 60.7%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_return_line_temperature_1005
+    title: Rücklauftemp
+  - type: state-label
+    style:
+      left: 58.6%
+      top: 55.4%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_actual_heating_capacity_1011
+    title: Abgabeleistung
+  - type: state-label
+    style:
+      left: 58.6%
+      top: 59.4%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_inverter_power_consumption_1012
+    title: Aufnahmeleistung
+  - type: state-label
+    style:
+      left: 57.8%
+      top: 63.3%
+      color: white
+      font-size: 2.1vmin
+    entity: sensor.eu20l_hp1_cop_1013
+    title: COP
+  - type: state-label
+    style:
+      right: 6.3%
+      top: 56.8%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_energy_source_inlet_temperature_1007
+    title: EQ Eintritt
+  - type: state-label
+    style:
+      left: 19.1%
+      top: 76%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.l_warmepumpe_heizladepumpe_regelung_hlp
+    title: HLP
+  - type: state-label
+    style:
+      left: 20%
+      top: 80%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_volume_flow_heat_sink_1006
+    title: WA-Vol.
+  - type: state-label
+    style:
+      left: 39.7%
+      top: 77%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_subcooling_temperature_1027
+    title: SC
+  - type: state-label
+    style:
+      right: 27.4%
+      top: 81%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_expansion_valve_opening_angle_1032
+    title: ExV
+  - type: state-label
+    style:
+      right: 7%
+      top: 76%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hp1_eqm_rating_1031
+    title: EqM
+  - type: icon
+    style:
+      left: 16.5%
+      top: 86.25%
+      color: white
+      "--mdc-icon-size": 2.4vmin
+    icon: mdi:shower-head
+  - type: state-label
+    style:
+      left: 21%
+      top: 84.5%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_boil1_temperature_actual_high_2002
+  - type: state-label
+    style:
+      left: 21%
+      top: 88%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_boil1_temperature_actual_low_2003
+  - type: icon
+    style:
+      right: 20.5%
+      top: 81%
+      color: white
+      "--mdc-icon-size": 2.4vmin
+    icon: mdi:water-boiler
+  - type: state-label
+    style:
+      right: 15%
+      top: 84.5%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_buff1_temperature_actual_high_3002
+  - type: state-label
+    style:
+      right: 15%
+      top: 88%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_buff1_temperature_actual_low_3003
+  - type: icon
+    style:
+      right: 12.5%
+      top: 81%
+      color: white
+      "--mdc-icon-size": 2.4vmin
+    icon: mdi:heating-coil
+  - type: state-label
+    style:
+      right: 7%
+      top: 84.5%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hc1_flow_line_temperature_5002
+  - type: state-label
+    style:
+      right: 7%
+      top: 88%
+      color: white
+      font-size: 2.4vmin
+    entity: sensor.eu20l_hc1_return_line_temperature_5003
+  # Optional flow-rate label: uncomment and replace the entity below with any
+  # flow-rate sensor you have available (e.g., the heat charge pump HLP, or an
+  # external circulation pump such as an IMP NMT MAX II reporting via Modbus).
+  # - type: state-label
+  #   style:
+  #     left: 28.5%
+  #     top: 80%
+  #     color: white
+  #     font-size: 2.4vmin
+  #   entity: sensor.nmt_pumpe_durchfluss

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0 (2026-04-11)
+
+- Added `service_panel_card.yaml`: a `picture-elements` Lovelace card that recreates the original Lambda Sigmatek service panel as a Home Assistant view, with state labels positioned over a cleaned background image
+- Added `images/lambda_panel_background.png`: cleaned screenshot of the original Lambda Sigmatek HMI used as the background for the service panel card
+- README: new "Additional Fun Project: Recreation of the Lambda Service Panel" section with installation steps and an optional slot for an external flow-rate sensor
+
 ## v1.0.0 (2026-04-10)
 
 Initial release.
