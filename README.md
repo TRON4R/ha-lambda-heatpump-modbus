@@ -1,5 +1,4 @@
-<img src="images/logo.png" alt="Lambda Heat Pump Logo" width="120" align="left" style="margin-right:16px;"/>
-<img width="120" align="right" style="margin-right:2px;" alt="Lambda Pufferspeicher" src="images/2026-04-10_Screenshot_Dashboard_Lambda_Pufferspeicher_only_400x380.png" />
+<img width="120" align="right" style="margin-left:16px;" alt="Lambda Pufferspeicher" src="images/2026-04-10_Screenshot_Dashboard_Lambda_Pufferspeicher_only_400x380.png" /><img src="images/logo.png" alt="Lambda Heat Pump Logo" width="120" align="left" style="margin-right:16px;"/>
 
 ### Lambda EU-L Series
 **Home Assistant Modbus TCP**
