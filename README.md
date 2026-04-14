@@ -1,7 +1,12 @@
 <img src="images/logo.png" alt="Lambda Heat Pump Logo" width="120" align="left" style="margin-right:16px;"/>
+<img width="120" height="114" align="right" style="margin-right:2px;" alt="Lambda Pufferspeicher" src="https://github.com/user-attachments/assets/83b9492b-4b38-4e96-8644-2f66e7550668" />
 
 ### Lambda EU-L Series
 **Home Assistant Modbus TCP**
+
+
+
+
 
 <br clear="left"/>
 
